@@ -1,0 +1,2 @@
+class AirnominalError(Exception):
+    pass
