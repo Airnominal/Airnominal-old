@@ -133,7 +133,7 @@ class PlatformsHandler:
                         "sen_id": str,
                         "mes": [
                             {
-                                "value": float,
+                                "value": Or(int, float),
                                 "lon": float,
                                 "lat": float,
                                 Optional("isoTime") : str,
