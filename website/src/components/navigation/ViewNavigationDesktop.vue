@@ -1,4 +1,4 @@
-<!-- Component for displaying navigation between timetable/menus/documents views on desktop -->
+<!-- Component for displaying navigation between views on desktop -->
 
 <template>
   <v-navigation-drawer :mini-variant="!isNavigationExpanded" app clipped mini-variant-width="72" permanent>

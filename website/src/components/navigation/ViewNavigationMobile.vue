@@ -1,4 +1,4 @@
-<!-- Component for displaying navigation between timetable/menus/documents views on mobile -->
+<!-- Component for displaying navigation between views on mobile -->
 
 <template>
   <v-bottom-navigation fixed grow>

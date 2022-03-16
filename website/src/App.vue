@@ -29,7 +29,8 @@
       </v-btn>
     </v-app-bar>
 
-    <view-navigation-desktop v-if="isNavigationDisplayed && !isMobile" />
+    <!-- TODO: Navigation -->
+    <!-- <view-navigation-desktop v-if="isNavigationDisplayed && !isMobile" /> -->
 
     <v-main id="main">
       <span id="ptr--target"></span>
@@ -51,7 +52,8 @@
       </template>
     </v-snackbar>
 
-    <view-navigation-mobile v-if="isNavigationDisplayed && isMobile" />
+    <!-- TODO: Navigation -->
+    <!-- <view-navigation-mobile v-if="isNavigationDisplayed && isMobile" /> -->
   </v-app>
 </template>
 
@@ -105,7 +107,7 @@ import PullToRefresh from 'pulltorefreshjs'
 import { Component, Vue } from 'vue-property-decorator'
 
 import { SettingsModule, ThemeType } from '@/store/modules/settings'
-import { updateAllData } from '@/store/modules/storage'
+import { StorageModule, updateAllData } from '@/store/modules/storage'
 import { displaySnackbar, hideSnackbar } from '@/utils/snackbar'
 
 @Component({
@@ -121,6 +123,7 @@ export default class App extends Vue {
   pageTitle = process.env.VUE_APP_TITLE
   isPullToRefreshAllowed = true
   isNavigationDisplayed = true
+  isUpdaterEnabled = true
 
   isSnackbarDisplayed = false
   snackbarMessage = ''
@@ -137,7 +140,7 @@ export default class App extends Vue {
       return
     }
 
-    if (this.isSnackbarDisplayed) return
+    // if (this.isSnackbarDisplayed) return
 
     this.snackbarMessage = (event as CustomEvent).detail.message
     this.snackbarButton = (event as CustomEvent).detail?.button
@@ -175,6 +178,24 @@ export default class App extends Vue {
     window.location.href = location.protocol + '//' + location.host + '?updated=' + (new Date()).getTime()
   }
 
+  async dataUpdater (continuous = true, silent = true): Promise<void> {
+    if (!this.isUpdaterEnabled) return
+
+    if (continuous) {
+      setTimeout(this.dataUpdater, SettingsModule.updateInterval * 1000)
+    }
+
+    let updaters = []
+    if (this.$router.currentRoute.name === 'home') {
+      updaters.push(StorageModule.updatePlatforms())
+    }
+    if (this.$router.currentRoute.name === 'viewPlatform') {
+      updaters.push(StorageModule.updatePlatforms())
+      updaters.push(StorageModule.updateMeasurements(this.$router.currentRoute.params.platform.split(',')))
+    }
+    await Promise.all(updaters)
+  }
+
   created (): void {
     // Event listeners for displaying and hiding snackbars
     document.addEventListener('displaySnackbar', this.snackbarHandler)
@@ -190,6 +211,10 @@ export default class App extends Vue {
 
     // Event listener for detecting controller changes
     navigator.serviceWorker && navigator.serviceWorker.addEventListener('controllerchange', this.controllerChangedHandler, { once: true })
+
+    // Start data updater
+    this.isUpdaterEnabled = true
+    this.dataUpdater()
   }
 
   mounted (): void {
@@ -200,7 +225,7 @@ export default class App extends Vue {
 
       shouldPullToRefresh: () => !window.scrollY && this.isPullToRefreshAllowed && SettingsModule.enablePullToRefresh,
       onRefresh: (): void => {
-        updateAllData()
+        this.dataUpdater(false, false)
       }
     })
 
@@ -223,6 +248,9 @@ export default class App extends Vue {
 
     // Remove event listener for detecting controller changes
     navigator.serviceWorker && navigator.serviceWorker.removeEventListener('controllerchange', this.controllerChangedHandler)
+
+    // Stop data updater
+    this.isUpdaterEnabled = false
 
     // Destroy pull to refresh instances
     PullToRefresh.destroyAll()

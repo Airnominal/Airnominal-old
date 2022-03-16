@@ -16,7 +16,8 @@ class Airnominal:
     schema = Schema(
         {
             "database": str,
-            Optional("logging"): Or(dict, str)
+            Optional("logging"): Or(dict, str),
+            Optional("cors"): [str],
         }
     )
     def __init__(self, configfile):
@@ -31,7 +32,7 @@ class Airnominal:
             self.config = self.schema.validate(config)
         except SchemaError as error:
             raise ConfigValidationError(str(error)) from error
-        
+
 
         self.session: scoped_session = None  # type: ignore
         self.engine = create_engine(self.config["database"])
@@ -40,9 +41,10 @@ class Airnominal:
 
         self.app = Flask("Airnominal", static_folder=None)
         self.app.airnominal = self
-        
+
         self.create_error_hooks()
         self.create_database_hooks()
+        self.create_cors_hooks()
         self.register_commands()
         self.registerHandlers()
         print(self.session)
@@ -64,12 +66,12 @@ class Airnominal:
         self.displayHandler = DisplayHandler()
         self.app.register_blueprint(self.displayHandler.reg)
         print(self.app.url_map)
-    
-    
+
+
     def register_commands(self):
         """Register all application commands."""
         self.app.cli.add_command(create_database_command)
-    
+
     def create_database_hooks(self):
         """Create and close the database session for each request."""
 
@@ -84,7 +86,23 @@ class Airnominal:
             else:
                 self.session.commit()
                 self.session.close()
-    
+
+    def create_cors_hooks(self):
+        """Allow CORS for specific URLs."""
+
+        @self.app.after_request
+        def _apply_cors(response):
+            if "cors" not in self.config:
+                return response
+
+            # Set request origin as allowed origin if it is allowed in config
+            if "*" in self.config["cors"]:
+                response.headers["Access-Control-Allow-Origin"] = "*"
+            elif "Origin" in request.headers and request.headers["Origin"] in self.config["cors"]:
+                response.headers["Access-Control-Allow-Origin"] = request.headers["Origin"]
+
+            return response
+
     def create_error_hooks(self):
         """Add error handlers that will show errors as JSON."""
 

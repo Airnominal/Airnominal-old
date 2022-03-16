@@ -32,26 +32,14 @@
 import { Component, Vue } from 'vue-property-decorator'
 
 import UrlDisplay from '@/components/subscribe/UrlDisplay.vue'
-import { EntityType, SettingsModule } from '@/store/modules/settings'
 
 @Component({
   components: {
     UrlDisplay
-
   }
 })
 export default class Subscribe extends Vue {
   vueAppApi = process.env.VUE_APP_BACKEND
-
-  get selectedType (): EntityType | undefined {
-    return SettingsModule.selectedEntity?.type
-  }
-
-  get selectedEntity (): string | undefined {
-    return SettingsModule.selectedEntity?.data.join(',')
-  }
-
-  // Prepare view
   created (): void {
     document.title = process.env.VUE_APP_TITLE + ' – Subscription'
     this.$emit('setPageTitle', 'Subscription')
@@ -60,15 +48,6 @@ export default class Subscribe extends Vue {
 
   destroyed (): void {
     this.$emit('setPullToRefreshAllowed', true)
-  }
-
-  // Hide calendar links when class is not selected
-  mounted (): void {
-    if (this.selectedType !== EntityType.Class || !this.selectedEntity) {
-      (this.$refs.calendarLinks as HTMLElement).classList.add('d-none')
-    } else {
-      (this.$refs.calendarLinks as HTMLElement).classList.remove('d-none')
-    }
   }
 }
 </script>

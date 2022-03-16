@@ -3,85 +3,40 @@
 import { getModule, Module, MutationAction, VuexModule } from 'vuex-module-decorators'
 
 import store from '@/store'
-import { SettingsModule } from '@/store/modules/settings'
 import { displaySnackbar } from '@/utils/snackbar'
 
-// TODO: Add storage
-
-export interface Lesson {
-  day: number;
-  time: number;
-  subject: string;
-  class: string;
-  teacher: string;
-  classroom: string;
+export interface Sensor {
+  mes_type: string;
+  name: string;
+  unit: string;
 }
 
-export interface Substitution extends Lesson {
-  date: string;
-  'original-teacher': string;
-  'original-classroom': string;
+export interface Platform {
+  id: string;
+  name: string;
+  description: string;
+  sensors: Sensor[];
 }
 
-export interface DisplayedLesson {
-  day: number;
-  time: number;
-  subjects: string[];
-  classes: string[];
-  teachers: string[];
-  classrooms: string[];
-  substitution: boolean;
-}
-
-export interface LunchSchedule {
-  class: string;
-  date: string;
-  time: string;
-  location: string;
-  notes: string | null;
-}
-
-export interface Menu {
-  date: string;
-  snack: {
-    normal: string,
-    vegetarian: string,
-    poultry: string,
-    fruitvegetable: string
-  };
-  lunch: {
-    normal: string,
-    vegetarian: string
+export interface Measurement {
+  hash: string;
+  timestamp: string;
+  platform: string;
+  coordinates?: [number, number];
+  data: {
+    name: string,
+    unit: string,
+    value: number,
   }
 }
 
-export interface Document {
-  data: string;
-  type: string;
-  url: string;
-  description: string;
-}
-
-export function getLessonId (substitution: Lesson): string {
-  return `${substitution.day}-${substitution.time}-${substitution.class}-${substitution.teacher}`
-}
-
-export function getSubstitutionId (substitution: Substitution): string {
-  return `${substitution.day}-${substitution.time}-${substitution.class}-${substitution['original-teacher']}`
-}
-
-export async function updateAllData (): Promise<void> {
+export async function updateAllData (silent = false): Promise<void> {
   await Promise.all([
-    StorageModule.updateLists(true),
-    StorageModule.updateTimetable(true),
-    StorageModule.updateEmptyClassrooms(true),
-    // StorageModule.updateSubstitutions(true),
-    // StorageModule.updateLunchSchedule(true),
-    // StorageModule.updateMenus(true),
-    StorageModule.updateDocuments(true)
+    StorageModule.updatePlatforms(),
+    StorageModule.updateMeasurements(),
   ])
 
-  displaySnackbar('Podatki posodobljeni')
+  if (!silent) displaySnackbar('Data updated')
 }
 
 class HTTPError extends Error {
@@ -105,132 +60,53 @@ async function fetchHandle (input: RequestInfo, init?: RequestInit): Promise<Res
   return response
 }
 
-@Module({ name: 'storage', dynamic: true, preserveState: true, preserveStateType: 'mergeReplaceArrays', store })
+@Module({ name: 'storage', dynamic: true, /* preserveState: true, preserveStateType: 'mergeReplaceArrays', */ store })
 class Storage extends VuexModule {
-  lastUpdated: Date | null = null
+  lastUpdated: string | null = null
 
-  classList: string[] | null = null
-  teacherList: string[] | null = null
-  classroomList: string[] | null = null
-
-  timetable: Lesson[] | null = null
-  _substitutions: Substitution[][] | null = null
-  emptyClassrooms: Lesson[] | null = null
-
-  lunchSchedule: [string, LunchSchedule[]][] | null = null
-  menus: [string, Menu][] | null = null
-
-  documents: Document[] | null = null
-
-  get substitutions (): Map<string, Substitution[]> {
-    const substitutionMap = new Map()
-
-    // Add keys to substitutions so they can be found more quickly
-    for (const substitution of (this._substitutions?.flat() || [])) {
-      if (!substitution) continue
-
-      const substitutionId = getSubstitutionId(substitution)
-      substitutionMap.set(substitutionId, (substitutionMap.get(substitutionId) || []).concat(substitution))
-    }
-
-    return substitutionMap
-  }
+  platforms: Map<string, Platform> = new Map()
+  measurements: Map<string, Measurement> = new Map()
 
   @MutationAction
-  async updateLists (forceUpdate = false) {
-    const isStoredLocally = 'storage' in localStorage && this.classList
-    const shouldUpdateStorage = !isStoredLocally || !('settings' in localStorage) || SettingsModule.enableUpdateOnLoad
-
+  async updatePlatforms () {
     if (!navigator.onLine) {
-      displaySnackbar('Internetna povezava ni na voljo')
-      return
-    }
-    if (!forceUpdate && !shouldUpdateStorage) {
+      displaySnackbar('No internet connection')
       return
     }
 
     try {
-      const responses = await Promise.all([
-        fetchHandle(process.env.VUE_APP_BACKEND + '/list/classes'),
-        fetchHandle(process.env.VUE_APP_BACKEND + '/list/teachers'),
-        fetchHandle(process.env.VUE_APP_BACKEND + '/list/classrooms')
-      ])
-
-      const [classList, teacherList, classroomList] = await Promise.all(responses.map(response => response.json()))
-      const lastUpdated = new Date()
-
-      return { classList, teacherList, classroomList, lastUpdated }
+      const response = await fetchHandle(process.env.VUE_APP_BACKEND + '/platforms')
+      const platformsList = await response.json()
+      const platformsMap = new Map<string, Platform>(platformsList.map((item: Platform) => [item.id, item]))
+      return { platforms: platformsMap }
     } catch (error) {
-      displaySnackbar('Napaka pri pridobivanju podatkov')
+      displaySnackbar('Error while accessing data')
       console.error(error)
     }
   }
 
   @MutationAction
-  async updateTimetable (forceUpdate = false) {
-    const isStoredLocally = 'storage' in localStorage && this.timetable
-    const shouldUpdateStorage = !isStoredLocally || !('settings' in localStorage) || SettingsModule.enableUpdateOnLoad
-
+  async updateMeasurements (platforms?: string[], measurements?: string[]) {
     if (!navigator.onLine) {
-      displaySnackbar('Internetna povezava ni na voljo')
+      displaySnackbar('No internet connection')
       return
     }
 
-    if (!forceUpdate && !shouldUpdateStorage) {
-      return
-    }
+    const lastUpdated = this.lastUpdated
+    const newUpdated = (new Date()).toISOString()
+
+    let params = new URLSearchParams()
+    if (lastUpdated) params.set('from', lastUpdated)
+    if (platforms?.length) params.set('platform', platforms.join(','))
+    if (measurements?.length) params.set('measurements', measurements.join(','))
 
     try {
-      const response = await fetchHandle(process.env.VUE_APP_BACKEND + '/timetable')
-      return { timetable: await response.json(), lastUpdated: new Date() }
+      const response = await fetchHandle(process.env.VUE_APP_BACKEND + '/measurements?' + params.toString())
+      const measurementsList = await response.json()
+      const measurementsMap = new Map<string, Measurement>(measurementsList.map((item: Measurement) => [item.hash, item]))
+      return { measurements: new Map([...this.measurements, ...measurementsMap]), lastUpdated: newUpdated }
     } catch (error) {
-      displaySnackbar('Napaka pri pridobivanju podatkov')
-      console.error(error)
-    }
-  }
-
-  @MutationAction
-  async updateEmptyClassrooms (forceUpdate = false) {
-    const isStoredLocally = 'storage' in localStorage && this.emptyClassrooms
-    const shouldUpdateStorage = !isStoredLocally || !('settings' in localStorage) || SettingsModule.enableUpdateOnLoad
-
-    if (!navigator.onLine) {
-      displaySnackbar('Internetna povezava ni na voljo')
-      return
-    }
-
-    if (!forceUpdate && !shouldUpdateStorage) {
-      return
-    }
-
-    try {
-      const response = await fetchHandle(process.env.VUE_APP_BACKEND + '/timetable/classrooms/empty')
-      return { emptyClassrooms: await response.json(), lastUpdated: new Date() }
-    } catch (error) {
-      displaySnackbar('Napaka pri pridobivanju podatkov')
-      console.error(error)
-    }
-  }
-
-  @MutationAction
-  async updateDocuments (forceUpdate = false) {
-    const isStoredLocally = 'storage' in localStorage && this.documents
-    const shouldUpdateStorage = !isStoredLocally || !('settings' in localStorage) || SettingsModule.enableUpdateOnLoad
-
-    if (!navigator.onLine) {
-      displaySnackbar('Internetna povezava ni na voljo')
-      return
-    }
-
-    if (!forceUpdate && !shouldUpdateStorage) {
-      return
-    }
-
-    try {
-      const response = await fetchHandle(process.env.VUE_APP_BACKEND + '/documents')
-      return { documents: await response.json(), lastUpdated: new Date() }
-    } catch (error) {
-      displaySnackbar('Napaka pri pridobivanju podatkov')
+      displaySnackbar('Error while accessing data')
       console.error(error)
     }
   }

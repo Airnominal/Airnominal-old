@@ -1,1 +1,3 @@
-database: sqlite:///app.db
+database: sqlite:///app.db?check_same_thread=False
+cors:
+- http://localhost:8080

@@ -2,7 +2,8 @@
   <div class="settings px-4 pt-4">
     <!-- TODO: Add settings actions here -->
 
-   <!--  <settings-action v-model="entitySelectionDialog"
+    <!--
+    <settings-action v-model="entitySelectionDialog"
       :icon="mdiTuneVariant"
       :label="selectedEntityLabel"
       :message="selectedEntity" />
@@ -15,19 +16,27 @@
     <settings-action v-model="lunchSelectionDialog"
       :icon="mdiTuneVariant"
       :message="selectedLunch"
-      label="Izbrano kosilo" /> -->
+      label="Izbrano kosilo" />
 
     <v-divider class="mt-6" />
+    -->
 
     <!-- TODO: Add settings switches here -->
 
+    <!--
     <settings-switch v-model="showSubstitutions" label="Prikaži nadomeščanja" />
     <settings-switch v-model="showLinksInTimetable" label="Prikaži povezave v urniku" />
     <settings-switch v-model="showHoursInTimetable" label="Prikaži ure v urniku" />
+    -->
+
     <settings-switch v-model="enablePullToRefresh" label="Pull to Refresh" />
-    <settings-switch v-model="enableUpdateOnLoad" label="Updates on Load" />
 
     <v-divider class="my-6" />
+
+    <settings-action v-model="updateIntervalDialog"
+      :icon="mdiTimerOutline"
+      :message="updateInterval"
+      label="Update Interval" />
 
     <settings-action v-model="themeSelectionDialog"
       :icon="mdiWeatherNight"
@@ -48,6 +57,7 @@
 
     <!-- TODO: Add settings dialogs (for settings actions) here -->
 
+    <!--
     <v-dialog v-model="entitySelectionDialog" width="35rem">
       <entity-selection v-if="entitySelectionDialog"
         initial-selection-stage="1"
@@ -61,6 +71,11 @@
 
     <v-dialog v-model="lunchSelectionDialog" width="35rem">
       <lunch-selection v-if="lunchSelectionDialog" @closeDialog=closeLunchDialog />
+    </v-dialog>
+    -->
+
+    <v-dialog v-model="updateIntervalDialog" width="35rem">
+      <update-interval v-if="updateIntervalDialog" @closeDialog=closeUpdateIntervalDialog />
     </v-dialog>
 
     <v-dialog v-model="themeSelectionDialog" width="35rem">
@@ -83,7 +98,7 @@
 </style>
 
 <script lang="ts">
-import { mdiTuneVariant, mdiUpdate, mdiWeatherNight } from '@mdi/js'
+import { mdiUpdate, mdiWeatherNight, mdiTimerOutline } from '@mdi/js'
 import { Component, Vue } from 'vue-property-decorator'
 
 import SettingsAction from '@/components/settings/SettingsAction.vue'
@@ -91,17 +106,19 @@ import SettingsSwitch from '@/components/settings/SettingsSwitch.vue'
 import ThemeSelection from '@/components/settings/ThemeSelection.vue'
 import { SettingsModule, ThemeType } from '@/store/modules/settings'
 import { StorageModule, updateAllData } from '@/store/modules/storage'
+import UpdateInterval from '@/components/settings/UpdateInterval.vue'
 
 @Component({
   components: {
+    UpdateInterval,
     ThemeSelection,
     SettingsAction,
     SettingsSwitch,
   }
 })
 export default class Settings extends Vue {
-  mdiTuneVariant = mdiTuneVariant
   mdiWeatherNight = mdiWeatherNight
+  mdiTimerOutline = mdiTimerOutline
   mdiUpdate = mdiUpdate
 
   // Get app version
@@ -111,13 +128,15 @@ export default class Settings extends Vue {
 
   // Get data version
   get dataVersion (): string {
-    if (!StorageModule.lastUpdated) return 'No data'
-
-    const lastUpdated = typeof StorageModule.lastUpdated === 'string' ? new Date(StorageModule.lastUpdated) : StorageModule.lastUpdated
-    return lastUpdated.toISOString()
+    return StorageModule.lastUpdated || 'No data'
   }
 
   // TODO: Add other values here
+
+  // Get current update interval
+  get updateInterval (): string {
+    return SettingsModule.updateInterval + 's'
+  }
 
   // Get theme type as string from enum
   get themeStatus (): string {
@@ -132,39 +151,12 @@ export default class Settings extends Vue {
   }
 
   // Dialog states
-  // TODO: Add dialog states here
-  entitySelectionDialog = false
-  snackSelectionDialog = false
-  lunchSelectionDialog = false
+  updateIntervalDialog = false
   themeSelectionDialog = false
 
-  // TODO: Add other toggles here
+  // TODO: Add dialog states here
 
   // Sync toggles with Vuex state
-  get showSubstitutions (): boolean {
-    return SettingsModule.showSubstitutions
-  }
-
-  set showSubstitutions (showSubstitutions: boolean) {
-    SettingsModule.setShowSubstitutions(showSubstitutions)
-  }
-
-  get showLinksInTimetable (): boolean {
-    return SettingsModule.showLinksInTimetable
-  }
-
-  set showLinksInTimetable (showLinksInTimetable: boolean) {
-    SettingsModule.setShowLinksInTimetable(showLinksInTimetable)
-  }
-
-  get showHoursInTimetable (): boolean {
-    return SettingsModule.showHoursInTimetable
-  }
-
-  set showHoursInTimetable (showHoursInTimetable: boolean) {
-    SettingsModule.setShowHoursInTimetable(showHoursInTimetable)
-  }
-
   get enablePullToRefresh (): boolean {
     return SettingsModule.enablePullToRefresh
   }
@@ -173,13 +165,7 @@ export default class Settings extends Vue {
     SettingsModule.setEnablePullToRefresh(enablePullToRefresh)
   }
 
-  get enableUpdateOnLoad (): boolean {
-    return SettingsModule.enableUpdateOnLoad
-  }
-
-  set enableUpdateOnLoad (enableUpdateOnLoad: boolean) {
-    SettingsModule.setEnableUpdateOnLoad(enableUpdateOnLoad)
-  }
+  // TODO: Add other toggles here
 
   // Prepare view
   created (): void {
@@ -209,21 +195,14 @@ export default class Settings extends Vue {
   }
 
   // Handle dialogs
-  // TODO: Add other dialog close functins here
-  closeEntityDialog (): void {
-    this.entitySelectionDialog = false
-  }
-
-  closeSnackDialog (): void {
-    this.snackSelectionDialog = false
-  }
-
-  closeLunchDialog (): void {
-    this.lunchSelectionDialog = false
+  closeUpdateIntervalDialog (): void {
+    this.updateIntervalDialog = false
   }
 
   closeThemeDialog (): void {
     this.themeSelectionDialog = false
   }
+
+  // TODO: Add other dialog close functions here
 }
 </script>
