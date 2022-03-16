@@ -1,5 +1,6 @@
 from os import stat
 from flask import Blueprint, request, jsonify, make_response
+from json import dumps
 from schema import Optional, Or, Schema, SchemaError
 from ..database import Measurement, Station, Sensor, MeasurementType
 from ..utils import returnError
@@ -73,14 +74,28 @@ class PlatformsHandler:
                 jsonify(
                     {
                         "success": True,
-                        "id": str(station.id),
-                        "key": key,
-                        "sensors" : [{"name": i.modelname, "id": i.id} for i in s]
+                        "config" : dumps(
+                            {
+                                "id": str(station.id),
+                                "key": key,
+                                "sensors" : [{"name": i.modelname, "id": i.id} for i in s]
+                            }
+                        )
                     }
                 ),
                 200,
             )
             response.headers["Content-Type"] = "application/json"
+            return response
+        @self.reg.route("/measurement/type", methods = ['GET'])
+        def getAlltypes():
+            m = self.session.query(MeasurementType).all()
+            response = make_response(
+                jsonify(
+                    [{"name": i.name, "unit": i.unit} for i in m]
+                ),
+                200,
+            )
             return response
         @self.reg.route("/new/type", methods = ['POST'])
         def newMeasurementType():
@@ -121,7 +136,8 @@ class PlatformsHandler:
                                 "value": float,
                                 "lon": float,
                                 "lat": float,
-                                Optional("isoTime") : str
+                                Optional("isoTime") : str,
+                                Optional("unixTime") : int
                             }
                         ],
                     }
@@ -150,6 +166,11 @@ class PlatformsHandler:
                                 time = parser.parse(mes["isoTime"])
                             except:
                                 return returnError(mes["isoTime"] + " is not valid iso format timestamp")
+                        elif "unixTime" in mes.keys():
+                            try:
+                                time = datetime.utcfromtimestamp(mes["unixTime"])
+                            except:
+                                return returnError(mes["unixTime"] + " is not valid unix format timestamp")
                         else:
                             time = datetime.now()
                         m = Measurement(value = mes["value"], datetime=time, lon=mes["lon"], lat=mes["lat"])
