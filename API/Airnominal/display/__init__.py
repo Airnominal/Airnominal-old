@@ -1,3 +1,4 @@
+import json
 from os import stat
 import sched
 from flask import Blueprint, request, jsonify, make_response
@@ -8,6 +9,7 @@ from secrets import token_hex
 from ..database import Session
 from datetime import datetime
 from dateutil import parser
+import hashlib
 
 class DisplayHandler:
     def __init__(self):
@@ -67,6 +69,7 @@ class DisplayHandler:
                         }
                     }]
                 }
+                a["hash"] = hashlib.sha256(json.dumps(a).encode("utf-8")).hexdigest()
                 l.append(a)
             response = make_response(
                 jsonify(l),
