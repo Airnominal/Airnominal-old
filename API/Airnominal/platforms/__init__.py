@@ -15,7 +15,7 @@ class PlatformsHandler:
         self.reg = Blueprint('platforms', __name__)
         self.registerRouts()
     def registerRouts(self):
-        @self.reg.route("/", methods = ['GET'])
+        @self.reg.route("", methods = ['GET'])
         def getStations():
             l = []
             for s in self.session.query(Station).all():
@@ -41,7 +41,6 @@ class PlatformsHandler:
         def registerNewStation():
             schema = Schema({
                 "name": str,
-                "platform": str,
                 "sensors": [
                     {
                         "name": str,
@@ -51,7 +50,8 @@ class PlatformsHandler:
             })
             try:
                 con = schema.validate(request.json)
-            except:
+            except Exception as err:
+                print(err)
                 return returnError("schema not validated")
             key = token_hex()
             station = Station(name = con["name"])
@@ -105,7 +105,8 @@ class PlatformsHandler:
             })
             try:
                 con = schema.validate(request.json)
-            except:
+            except Exception as err:
+                print(err)
                 return returnError("schema not validated")
             m = self.session.query(MeasurementType).filter(MeasurementType.name == con["name"]).all()
             print(m)
@@ -149,9 +150,11 @@ class PlatformsHandler:
             else:
                 j = request.json
             try:
+                print(request, j)
                 con = schema.validate(j)
-            except:
-               return returnError("First schema not validated")
+            except Exception as error:
+                print(error)
+                return returnError("First schema not validated")
             for stat in con:
                 s = self.session.query(Station).filter(Station.id == int(stat["id"])).all()
                 if not s:
@@ -193,16 +196,16 @@ class PlatformsHandler:
             response.headers["Content-Type"] = "application/json"
             return response
 
-                
-    
 
 
-            
-            
-            
-
-                
 
 
-    
+
+
+
+
+
+
+
+
 

@@ -76,7 +76,7 @@ kjer je respons potem
 HTTP 200 OK
 ```
 
-oziroma 
+oziroma
 
 ```json5
 {
@@ -95,7 +95,7 @@ oziroma
 }
 ```
 
-Erorji bodo tudi na splošno human readable, tko da jih ni treba neki parsat, sam displajat jih je treba. 
+Erorji bodo tudi na splošno human readable, tko da jih ni treba neki parsat, sam displajat jih je treba.
 
 ## Urejanje platforme
 
@@ -151,7 +151,7 @@ GET /measurements?platform=AAAAAA,BBBBBB&measurements=temperature,humidity,pm10,
 
 - `to`: Do kdaj naj bodo meritve, isto ISO format. Če ni podan, vrne vse, kar ima.
   **Response:**
-  
+
   ```json5
   [ // Seznam vseh meritev/skupin meritev, ki ustrezajo pogojem iz requesta
     {
@@ -159,20 +159,15 @@ GET /measurements?platform=AAAAAA,BBBBBB&measurements=temperature,humidity,pm10,
         "timestamp": "2022-02-24T14:06:29.789987", // Tisto kar dobiš v Pythonu z datetime.isoformat() - https://docs.python.org/3/library/datetime.html#datetime.datetime.isoformat
         "platform": "AAAAA", // ID platforme. Pač ista stvar kot v requestu.
         "coordinates": [12.345, 54.321], // Trenutna lokacija platforme, če jo je treba met.
-        "measurements": { // Dejanske meritve
-            "temperature": { // ID tipa meritve
-                "value": 20,
-                "unit": "°C"
-            },
-            "nox":
-                "value": 42,
-                "unit": X"
-            }
+        "data": { // Dejanske meritve
+            "name": "temperature",
+            "unit": "°C",
+            "value": 20,
         }
     }
   ]
   ```
-  
+
   ## Step 4: Shranjevanje in prikazovanje podatkov
-  
+
   Iz pridobljenih podatkov odstrani vse podvojene (če bi slučajno večkrat naredil isti request ali pa kaj takega), jih shrani (verjetno v `localStorage`) in jih prikaže na grafih.
