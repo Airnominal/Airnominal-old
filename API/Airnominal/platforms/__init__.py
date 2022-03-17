@@ -143,8 +143,13 @@ class PlatformsHandler:
                     }
                 ],
             }])
+            
+            if type(request.json) != list:
+                j = [request.json]
+            else:
+                j = request.json
             try:
-                con = schema.validate(request.json)
+                con = schema.validate(j)
             except:
                return returnError("First schema not validated")
             for stat in con:
