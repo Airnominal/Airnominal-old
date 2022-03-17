@@ -65,7 +65,7 @@ class PlatformsHandler:
                 sensor = Sensor(modelname = i["name"])
                 s.append(sensor)
                 station.sensors.append(sensor)
-            m.sensors.extend(s)
+                m.sensors.append(sensor)
             self.session.add(station)
             for i in s:
                 self.session.add(i)
@@ -144,7 +144,7 @@ class PlatformsHandler:
                     }
                 ],
             }])
-            
+
             if type(request.json) != list:
                 j = [request.json]
             else:

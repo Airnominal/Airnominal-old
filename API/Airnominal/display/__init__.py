@@ -47,8 +47,9 @@ class DisplayHandler:
                         return returnError("No measurement type of " + str(i))
                     sen = sen.join(MeasurementType).filter(MeasurementType.name.in_(con["measurements"]))
             #proccess DateTime
-            print(sen.all())
+            #print("Sen", sen.all(), [s.id for s in sen.all()])
             mes = self.session.query(Measurement).filter(Measurement.sensor_id.in_([s.id for s in sen.all()]))
+            #print("Mes", mes.all())
             try:
                 if "from" in con.keys():
                     con["from"] = parser.parse(con["from"])
@@ -63,7 +64,7 @@ class DisplayHandler:
             for m in mes.all():
                 a = {
                     "timestamp": m.datetime.isoformat(),
-                    "platform": m.sensor_id,
+                    "platform": m.Sensor.station_id,
                     "coordinates": [m.lat, m.lon],
                     "data": {
                         "name": m.Sensor.MeasurementType.name,
