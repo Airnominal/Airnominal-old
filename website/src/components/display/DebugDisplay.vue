@@ -17,7 +17,7 @@ import { displaySnackbar } from '@/utils/snackbar'
 import { Measurement, Platform, StorageModule } from '@/store/modules/storage'
 
 @Component
-export default class TextDisplay extends Vue {
+export default class DebugDisplay extends Vue {
   @Prop() platform!: string
 
   get name (): string | undefined {

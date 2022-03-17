@@ -2,12 +2,15 @@
   <v-app>
     <v-app-bar app clipped-left color="primary" dark>
       <div class="d-flex align-center overflow-x-hidden pr-1">
-        <v-img alt="Airnominal Logo" src="./assets/logo.svg" width="40" />
+        <router-link title="Homepage" :to="{ name: 'home' }">
+          <v-img alt="Airnominal Logo" src="./assets/logo.svg" width="40" />
+        </router-link>
         <v-toolbar-title class="ml-2">{{ pageTitle }}</v-toolbar-title>
       </div>
 
       <v-spacer />
 
+      <!--
       <v-btn v-if="isNavigationDisplayed"
         :to="{ name: 'subscribe' }"
         alt="Subscription"
@@ -17,6 +20,7 @@
         large>
         <v-icon>{{ mdiRss }}</v-icon>
       </v-btn>
+      -->
 
       <v-btn v-if="isNavigationDisplayed"
         :to="{ name: 'settings' }"
@@ -186,12 +190,12 @@ export default class App extends Vue {
     }
 
     let updaters = []
-    if (this.$router.currentRoute.name === 'home') {
+    if (!this.$router.currentRoute.name || this.$router.currentRoute.name === 'home') {
       updaters.push(StorageModule.updatePlatforms())
     }
-    if (this.$router.currentRoute.name === 'viewPlatform') {
+    if (this.$router.currentRoute.name === 'viewStation') {
       updaters.push(StorageModule.updatePlatforms())
-      updaters.push(StorageModule.updateMeasurements(this.$router.currentRoute.params.platform.split(',')))
+      updaters.push(StorageModule.updateMeasurements(this.$router.currentRoute.params.stations.split(',')))
     }
     await Promise.all(updaters)
   }

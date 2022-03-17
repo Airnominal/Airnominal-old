@@ -2,9 +2,9 @@
   <v-row class="px-8 pt-8">
     <v-col>
       <v-list>
-        <strong>Select Platform</strong>
+        <strong>Select Station</strong>
         <v-list-item-group color="primary">
-          <v-list-item v-for="[id, platform] in platforms" :key="id" link :to="{ name: 'viewPlatform', params: { platform: id } }">
+          <v-list-item v-for="[id, platform] in platforms" :key="id" link :to="{ name: 'viewStation', params: { stations: id } }">
             <v-list-item-content>
               <v-list-item-title v-text="platform.name"></v-list-item-title>
               <v-list-item-subtitle v-text="platform.description"></v-list-item-subtitle>
@@ -20,13 +20,9 @@
 import { Component, Vue } from 'vue-property-decorator'
 
 import { displaySnackbar } from '@/utils/snackbar'
-import TextDisplay from '@/components/display/TextDisplay.vue'
-import ChartDisplay from '@/components/display/ChartDisplay.vue'
 import { Platform, StorageModule } from '@/store/modules/storage'
 
-@Component({
-  components: { ChartDisplay, TextDisplay }
-})
+@Component({})
 export default class Home extends Vue {
   get platforms (): Map<string, Platform> {
     return StorageModule.platforms

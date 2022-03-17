@@ -1,8 +1,17 @@
 <template>
   <div v-if="isReady">
-    <v-row class="px-8 pt-8" v-for="sensor in sensors" :key="sensor.mes_type">
-      <!-- TODO: Improve display -->
-      <chart-display class="ma-3" :platforms="platforms" :type="sensor" />
+    <v-row class="px-4 pt-4">
+      <v-col class="ps-4 pt-4" cols="12" style="max-width: 420px;">
+        <v-card class="pb-4" tile outlined>
+          <div class="pt-4 px-4 text-h6">Current Data</div>
+          <div class="pt-4 px-4" v-for="platform in platforms" :key="platform.id">
+            <current-display :platform="platform" />
+          </div>
+        </v-card>
+      </v-col>
+      <v-col class="ps-4 pt-4" cols="12" style="max-width: 700px;" v-for="sensor in sensors" :key="sensor.mes_type">
+        <chart-display :platforms="platforms" :type="sensor" />
+      </v-col>
     </v-row>
   </div>
   <loading v-else />
@@ -11,44 +20,45 @@
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator'
 
-import { displaySnackbar } from '@/utils/snackbar'
-import TextDisplay from '@/components/display/TextDisplay.vue'
 import ChartDisplay from '@/components/display/ChartDisplay.vue'
-import { Platform, Sensor, StorageModule } from '@/store/modules/storage'
+import CurrentDisplay from '@/components/display/CurrentDisplay.vue'
 import Loading from '@/components/base/Loading.vue'
 
+import { Platform, Sensor, StorageModule } from '@/store/modules/storage'
+
 @Component({
-  components: { Loading, ChartDisplay, TextDisplay }
+  components: { CurrentDisplay, ChartDisplay, Loading }
 })
-export default class ViewPlatform extends Vue {
+export default class ViewStation extends Vue {
   isReady = false
 
   get platforms (): Platform[] {
-    const platformId = this.$route.params.platform.split(',')
+    const platformId = this.$route.params.stations.split(',')
     const platformInfo = platformId.map(id => StorageModule.platforms.get(id))
     return (platformInfo as Platform[])
   }
 
   get sensors (): Sensor[] {
-    let sensorList = new Set<Sensor>()
+    let sensors = new Map<string, Sensor>()
+
     // TODO: Properly remove duplicates
     for (const platform of this.platforms) {
       for (const sensor of platform.sensors) {
-        sensorList.add(sensor)
+        sensors.set(sensor.mes_type, sensor)
       }
     }
-    console.log(sensorList)
-    return [...sensorList]
+    console.log(sensors)
+    return [...sensors.values()]
   }
 
   async created (): Promise<void> {
-    const platformId = this.$route.params.platform.split(',')
+    const platformId = this.$route.params.stations.split(',')
 
     // Update data
     await StorageModule.updatePlatforms()
     await StorageModule.updateMeasurements(platformId)
 
-    // Handle invalid platforms
+    // Handle invalid stations
     const platformInfo = platformId.map(id => StorageModule.platforms.get(id))
     if (!platformInfo.every(item => item)) {
       await this.$router.replace({ name: 'notFound', params: { 0: this.$route.fullPath } })
@@ -58,7 +68,7 @@ export default class ViewPlatform extends Vue {
     // Set page title
     const platformName = platformInfo.map(item => item?.name).join(', ')
     document.title = process.env.VUE_APP_TITLE + ' – ' + platformName
-    this.$emit('setPageTitle', 'Platform – ' + platformName)
+    this.$emit('setPageTitle', 'Station – ' + platformName)
 
     this.isReady = true
   }
