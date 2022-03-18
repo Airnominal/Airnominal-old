@@ -1,13 +1,41 @@
 <template>
-  <v-card class="pa-3 small" tile outlined>
-    <line-chart :chart-data="measurements" :options="options" />
+  <v-card class="small" tile outlined>
+    <line-chart class="ma-3" ref="chart" :chart-data="measurements" :options="options" />
+    <v-card-actions>
+      <v-btn small color="blue" text @click="zoomReset">All</v-btn>
+      <v-btn small color="blue" text @click="zoomSet(24*60)">Last 24h</v-btn>
+      <v-btn small color="blue" text @click="zoomSet(60)">Last 60min</v-btn>
+      <v-btn small color="blue" text @click="zoomSet(10)">Last 10min</v-btn>
+    </v-card-actions>
+    <!--
+    <v-card-actions class="mt-n3 text-actions">
+      <span class="ps-3">Range:</span>
+      <v-text-field dense hide-details type="datetime-local" class="inline-input mt-n2 mx-2">Test</v-text-field> —
+      <v-text-field dense hide-details type="datetime-local" class="inline-input mt-n2 mx-2">Test</v-text-field>
+    </v-card-actions>
+    -->
   </v-card>
 </template>
 
+<style lang="scss">
+.inline-input {
+  max-width: 12rem !important;
+}
+
+.text-actions {
+  font-size: 0.75rem !important;
+  font-weight: 500;
+  line-height: 2.25rem;
+  letter-spacing: 0.0892857143em !important;
+  font-family: "Roboto", sans-serif !important;
+  text-transform: uppercase !important;
+}
+</style>
+
 <script lang="ts">
 import VComp from '@vue/composition-api'
-import { Component, Prop, Vue } from 'vue-property-decorator'
-import { LineChart } from 'vue-chart-3'
+import { Component, Prop, Ref, Vue, Watch } from 'vue-property-decorator'
+import { ExtractComponentData, LineChart } from 'vue-chart-3'
 import { Chart, ChartOptions, LinearScaleOptions, registerables } from 'chart.js'
 import zoomPlugin from 'chartjs-plugin-zoom'
 
@@ -37,9 +65,42 @@ export default class TextDisplay extends Vue {
   @Prop() data!: Measurement[]
   @Prop() type!: Sensor
 
+  @Ref() readonly chart!: ExtractComponentData<typeof LineChart>
+
+  currentZoom?: number
+  userZoom = false
+
   created (): void {
+    // Set chart title
     this.options.scales!.y!.title!.text = `${this.type.name} (${this.type.unit})`
     this.options.plugins!.title!.text = this.type.name
+
+    // Prevent user-set zoom from resetting
+    this.options.plugins!.zoom!.pan!.onPan = () => { this.userZoom = true }
+    this.options.plugins!.zoom!.zoom!.onZoom = () => { this.userZoom = true }
+  }
+
+  mounted (): void {
+    this.zoomSet(60)
+  }
+
+  zoomReset (): void {
+    this.chart.chartInstance?.resetZoom('none')
+    this.currentZoom = undefined
+    this.userZoom = false
+  }
+
+  zoomSet (minutes: number): void {
+    const chart = this.chart.chartInstance
+    const scaleBounds = chart?.getInitialScaleBounds().x!
+    const scaleLimits = chart?.scales.x!
+
+    const dataMax = (scaleBounds.max || scaleLimits.max || 0) + 15000
+    const dataMin = Math.max(dataMax - minutes*60*1000, scaleBounds.min || scaleLimits.min || 0)
+
+    chart?.zoomScale('x', { min: dataMin, max: dataMax }, 'none')
+    this.currentZoom = minutes
+    this.userZoom = false
   }
 
   options: ChartOptions<'line'> = {
@@ -55,6 +116,12 @@ export default class TextDisplay extends Vue {
             minute: 'HH:mm',
             hour: 'HH:mm'
           }
+        },
+        ticks: {
+          autoSkip: true,
+          autoSkipPadding: 25,
+          maxRotation: 0,
+          minRotation: 0,
         }
       },
       y: {
@@ -78,9 +145,14 @@ export default class TextDisplay extends Vue {
           drag: { enabled: true, modifierKey: 'ctrl' },
           wheel: { enabled: true },
           pinch: { enabled: true },
-          mode: 'x'
+          mode: 'x',
+        },
+        limits: {
+          x: {
+            minRange: 65 * 1000
+          }
         }
-      }
+      },
     },
     animation: false,
   }
@@ -119,8 +191,18 @@ export default class TextDisplay extends Vue {
     (this.options.scales!.y as LinearScaleOptions)!.suggestedMin = Math.max(Math.min(...values) - 5, 0);
     (this.options.scales!.y as LinearScaleOptions)!.suggestedMax = Math.max(...values) + 5
 
-    console.log(data)
+    // console.log(data)
     return data
   }
+
+  @Watch('measurements')
+  onMeasurementsChange() {
+    // If user has not explicitly zoomed in, re-zoom to show the latest data
+    if (this.userZoom) return
+
+    this.chart.chartInstance?.resetZoom('none')
+    if (this.currentZoom) this.zoomSet(this.currentZoom)
+  }
+
 }
 </script>
