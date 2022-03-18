@@ -27,11 +27,10 @@
     <settings-switch v-model="showSubstitutions" label="Prikaži nadomeščanja" />
     <settings-switch v-model="showLinksInTimetable" label="Prikaži povezave v urniku" />
     <settings-switch v-model="showHoursInTimetable" label="Prikaži ure v urniku" />
-    -->
-
     <settings-switch v-model="enablePullToRefresh" label="Pull to Refresh" />
 
     <v-divider class="my-6" />
+    -->
 
     <settings-action v-model="updateIntervalDialog"
       :icon="mdiTimerOutline"
@@ -47,13 +46,8 @@
 
     <settings-action :icon="mdiUpdate"
       :message="`Current version: ${appVersion}`"
-      label="Update app"
+      label="Update Upp"
       @click.native="updateApp" />
-
-    <settings-action :icon="mdiUpdate"
-      :message="`Current version: ${dataVersion}`"
-      label="Update data"
-      @click.native="updateData" />
 
     <!-- TODO: Add settings dialogs (for settings actions) here -->
 
@@ -105,7 +99,6 @@ import SettingsAction from '@/components/settings/SettingsAction.vue'
 import SettingsSwitch from '@/components/settings/SettingsSwitch.vue'
 import ThemeSelection from '@/components/settings/ThemeSelection.vue'
 import { SettingsModule, ThemeType } from '@/store/modules/settings'
-import { StorageModule, updateAllData } from '@/store/modules/storage'
 import UpdateInterval from '@/components/settings/UpdateInterval.vue'
 
 @Component({
@@ -124,11 +117,6 @@ export default class Settings extends Vue {
   // Get app version
   get appVersion (): string {
     return process.env.VUE_APP_VERSION || 'No data'
-  }
-
-  // Get data version
-  get dataVersion (): string {
-    return StorageModule.lastUpdated || 'No data'
   }
 
   // TODO: Add other values here
@@ -188,10 +176,6 @@ export default class Settings extends Vue {
 
     // Add GET parameter to invalidate cache of index HTML file
     window.location.href = location.protocol + '//' + location.host + '?updated=' + (new Date()).getTime()
-  }
-
-  async updateData (): Promise<void> {
-    await updateAllData()
   }
 
   // Handle dialogs

@@ -107,7 +107,7 @@ web_modules/
 
 # Configuration & Database
 config.yaml
-app.db
+*.db
 
 # Do not ignore .gitkeep files
 !.gitkeep

@@ -8,12 +8,12 @@
 import VComp from '@vue/composition-api'
 import { Component, Prop, Vue } from 'vue-property-decorator'
 import { LineChart } from 'vue-chart-3'
-import { Chart, ChartData, ChartOptions, LinearScale, LinearScaleOptions, registerables } from 'chart.js'
+import { Chart, ChartOptions, LinearScaleOptions, registerables } from 'chart.js'
 import zoomPlugin from 'chartjs-plugin-zoom'
 
-import { Measurement, Platform, Sensor, StorageModule } from '@/store/modules/storage'
-
 import 'chartjs-adapter-date-fns'
+import { Sensor, Station } from '@/utils/getStations'
+import { Measurement } from '@/utils/getMeasurements'
 
 Chart.register(zoomPlugin, ...registerables)
 Vue.use(VComp)
@@ -33,7 +33,8 @@ const colors = [
   components: { LineChart }
 })
 export default class TextDisplay extends Vue {
-  @Prop() platforms!: Platform[]
+  @Prop() stations!: Station[]
+  @Prop() data!: Measurement[]
   @Prop() type!: Sensor
 
   created (): void {
@@ -65,22 +66,27 @@ export default class TextDisplay extends Vue {
     plugins: {
       title: {
         display: true,
-        font: { size: 16 }
-        // text: this.type.name
+        font: { size: 16 },
       },
       zoom: {
+        pan: {
+          enabled: true,
+          modifierKey: 'alt',
+          mode: 'x',
+        },
         zoom: {
-          drag: { enabled: true },
-          pinch: { enabled: true },
+          drag: { enabled: true, modifierKey: 'ctrl' },
           wheel: { enabled: true },
+          pinch: { enabled: true },
           mode: 'x'
         }
       }
-    }
+    },
+    animation: false,
   }
 
   get measurements (): any {
-    let source = [...StorageModule.measurements.values()].filter((item: Measurement) => item.data.name == this.type.mes_type)
+    let source = this.data.filter((item: Measurement) => item.data.name == this.type.mes_type)
 
     let data: {
       datasets: {
@@ -94,7 +100,7 @@ export default class TextDisplay extends Vue {
 
     let values: number[] = []
 
-    for (const platform of this.platforms) {
+    for (const platform of this.stations) {
       const color = colors[parseInt(platform.id) % colors.length]
       const current = source.filter(item => item.platform == platform.id)
 

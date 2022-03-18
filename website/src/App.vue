@@ -111,7 +111,6 @@ import PullToRefresh from 'pulltorefreshjs'
 import { Component, Vue } from 'vue-property-decorator'
 
 import { SettingsModule, ThemeType } from '@/store/modules/settings'
-import { StorageModule, updateAllData } from '@/store/modules/storage'
 import { displaySnackbar, hideSnackbar } from '@/utils/snackbar'
 
 @Component({
@@ -127,7 +126,6 @@ export default class App extends Vue {
   pageTitle = process.env.VUE_APP_TITLE
   isPullToRefreshAllowed = true
   isNavigationDisplayed = true
-  isUpdaterEnabled = true
 
   isSnackbarDisplayed = false
   snackbarMessage = ''
@@ -182,24 +180,6 @@ export default class App extends Vue {
     window.location.href = location.protocol + '//' + location.host + '?updated=' + (new Date()).getTime()
   }
 
-  async dataUpdater (continuous = true, silent = true): Promise<void> {
-    if (!this.isUpdaterEnabled) return
-
-    if (continuous) {
-      setTimeout(this.dataUpdater, SettingsModule.updateInterval * 1000)
-    }
-
-    let updaters = []
-    if (!this.$router.currentRoute.name || this.$router.currentRoute.name === 'home') {
-      updaters.push(StorageModule.updatePlatforms())
-    }
-    if (this.$router.currentRoute.name === 'viewStation') {
-      updaters.push(StorageModule.updatePlatforms())
-      updaters.push(StorageModule.updateMeasurements(this.$router.currentRoute.params.stations.split(',')))
-    }
-    await Promise.all(updaters)
-  }
-
   created (): void {
     // Event listeners for displaying and hiding snackbars
     document.addEventListener('displaySnackbar', this.snackbarHandler)
@@ -215,10 +195,6 @@ export default class App extends Vue {
 
     // Event listener for detecting controller changes
     navigator.serviceWorker && navigator.serviceWorker.addEventListener('controllerchange', this.controllerChangedHandler, { once: true })
-
-    // Start data updater
-    this.isUpdaterEnabled = true
-    this.dataUpdater()
   }
 
   mounted (): void {
@@ -229,7 +205,7 @@ export default class App extends Vue {
 
       shouldPullToRefresh: () => !window.scrollY && this.isPullToRefreshAllowed && SettingsModule.enablePullToRefresh,
       onRefresh: (): void => {
-        this.dataUpdater(false, false)
+        // TODO: Implement pull to refresh
       }
     })
 
@@ -252,9 +228,6 @@ export default class App extends Vue {
 
     // Remove event listener for detecting controller changes
     navigator.serviceWorker && navigator.serviceWorker.removeEventListener('controllerchange', this.controllerChangedHandler)
-
-    // Stop data updater
-    this.isUpdaterEnabled = false
 
     // Destroy pull to refresh instances
     PullToRefresh.destroyAll()
