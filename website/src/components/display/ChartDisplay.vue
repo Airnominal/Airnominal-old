@@ -78,19 +78,63 @@ export default class TextDisplay extends Vue {
     // Prevent user-set zoom from resetting
     this.options.plugins!.zoom!.pan!.onPan = () => { this.userZoom = true }
     this.options.plugins!.zoom!.zoom!.onZoom = () => { this.userZoom = true }
+
+    // Set query params to the current zoom
+    const setQueryParams = (context: { chart: Chart }) => {
+      const oldQuery = this.$router.currentRoute.query
+      const newQuery = { ...oldQuery }
+
+      newQuery.from = new Date(context.chart.scales.x.min).toISOString()
+      newQuery.to = new Date(context.chart.scales.x.max).toISOString()
+
+      if (oldQuery.from !== newQuery.from || oldQuery.to !== newQuery.to) {
+        this.$router.replace({ query: newQuery })
+      }
+    }
+    this.options.plugins!.zoom!.pan!.onPanComplete = setQueryParams
+    this.options.plugins!.zoom!.zoom!.onZoomComplete = setQueryParams
   }
 
   mounted (): void {
+    const fromDate = Date.parse(this.$router.currentRoute.query.from as string)
+    const toDate = Date.parse(this.$router.currentRoute.query.to as string)
+
+    // Allow setting from and to dates using query params
+    if (fromDate || toDate) {
+      const chart = this.chart.chartInstance
+      chart?.zoomScale('x', {
+        min: fromDate || chart.scales.x.min,
+        max: toDate || chart.scales.x.max
+      }, 'none')
+      this.userZoom = true
+      return
+    }
+
+    // Display last 60 minutes by default
     this.zoomSet(60)
   }
 
+  resetQueryParams (): void {
+    const query = { ...this.$router.currentRoute.query }
+    let needsChange = !!(query.from || query.to)
+
+    delete query.from
+    delete query.to
+
+    if (needsChange) this.$router.replace({ query: query })
+  }
+
   zoomReset (): void {
+    this.resetQueryParams()
+
     this.chart.chartInstance?.resetZoom('none')
     this.currentZoom = undefined
     this.userZoom = false
   }
 
   zoomSet (minutes: number): void {
+    this.resetQueryParams()
+
     const chart = this.chart.chartInstance
     const scaleBounds = chart?.getInitialScaleBounds().x!
     const scaleLimits = chart?.scales.x!
