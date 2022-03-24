@@ -56,6 +56,12 @@ const colors = [
   '#FF5722'
 ]
 
+function getLocalISOString (date: number | string | Date): string {
+  date = new Date(date)
+  date.setMinutes(date.getMinutes() - date.getTimezoneOffset())
+  return date.toISOString().slice(0, 16)
+}
+
 @Component({
   components: { LineChart }
 })
@@ -91,8 +97,8 @@ export default class TextDisplay extends Vue {
       newQuery.from = new Date(context.chart.scales.x.min).toISOString()
       newQuery.to = new Date(context.chart.scales.x.max).toISOString()
 
-      this.rangeStart = newQuery.from.substring(0, 16)
-      this.rangeEnd = newQuery.to.substring(0, 16)
+      this.rangeStart = getLocalISOString(newQuery.from)
+      this.rangeEnd = getLocalISOString(newQuery.to)
 
       if (oldQuery.from !== newQuery.from || oldQuery.to !== newQuery.to) {
         this.$router.replace({ query: newQuery })
@@ -114,8 +120,8 @@ export default class TextDisplay extends Vue {
         min: fromDate || chart.scales.x.min,
         max: toDate || chart.scales.x.max
       }, 'none')
-      this.rangeStart = new Date(fromDate).toISOString().substring(0, 16)
-      this.rangeEnd = new Date(toDate).toISOString().substring(0, 16)
+      this.rangeStart =  getLocalISOString(fromDate)
+      this.rangeEnd = getLocalISOString(toDate)
       return
     }
 
