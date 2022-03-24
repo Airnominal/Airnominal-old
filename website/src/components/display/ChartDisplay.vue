@@ -40,6 +40,7 @@ import zoomPlugin from 'chartjs-plugin-zoom'
 import 'chartjs-adapter-date-fns'
 import { Sensor, Station } from '@/utils/getStations'
 import { Measurement } from '@/utils/getMeasurements'
+import { SettingsModule } from '@/store/modules/settings'
 
 Chart.register(zoomPlugin, ...registerables)
 Vue.use(VComp)
@@ -82,7 +83,7 @@ export default class TextDisplay extends Vue {
 
     // Set query params to the current zoom
     const setQueryParams = (context: { chart: Chart }) => {
-      if (!this.userZoom) return
+      if (!SettingsModule.storeRangeInURL || !this.userZoom) return
 
       const oldQuery = this.$router.currentRoute.query
       const newQuery = { ...oldQuery }
@@ -123,6 +124,8 @@ export default class TextDisplay extends Vue {
   }
 
   resetQueryParams (): void {
+    if (!SettingsModule.storeRangeInURL) return
+
     const query = { ...this.$router.currentRoute.query }
     let needsChange = !!(query.from || query.to)
 
@@ -160,9 +163,11 @@ export default class TextDisplay extends Vue {
   }
 
   handleRangeSelection (): void {
+    this.userZoom = true
+    if (!SettingsModule.storeRangeInURL) return
+
     const oldQuery = this.$router.currentRoute.query
     const newQuery = { ...oldQuery }
-    this.userZoom = true
 
     if (this.rangeStart) newQuery.from = this.rangeStart
     else delete newQuery.from

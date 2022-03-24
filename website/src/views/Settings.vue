@@ -28,9 +28,11 @@
     <settings-switch v-model="showLinksInTimetable" label="Prikaži povezave v urniku" />
     <settings-switch v-model="showHoursInTimetable" label="Prikaži ure v urniku" />
     <settings-switch v-model="enablePullToRefresh" label="Pull to Refresh" />
+    -->
+
+    <settings-switch v-model="storeRangeInURL" label="Store Chart Range in URL" />
 
     <v-divider class="my-6" />
-    -->
 
     <settings-action v-model="updateIntervalDialog"
       :icon="mdiTimerOutline"
@@ -151,6 +153,14 @@ export default class Settings extends Vue {
 
   set enablePullToRefresh (enablePullToRefresh: boolean) {
     SettingsModule.setEnablePullToRefresh(enablePullToRefresh)
+  }
+
+  get storeRangeInURL (): boolean {
+    return SettingsModule.storeRangeInURL
+  }
+
+  set storeRangeInURL (storeRangeInURL: boolean) {
+    SettingsModule.setStoreRangeInURL(storeRangeInURL)
   }
 
   // TODO: Add other toggles here
