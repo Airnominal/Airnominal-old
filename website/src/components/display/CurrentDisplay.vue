@@ -4,7 +4,11 @@
     <ul>
       <li>
         <strong>Last Updated:</strong>
-        {{ lastUpdated }}
+        {{ lastUpdated.replace('T', ' ').slice(0, 19) + ' Z' }}
+      </li>
+      <li>
+        <strong>Last Data:</strong>
+        {{ lastData }}
       </li>
       <li v-for="measurement in latest" :key="measurement.hash">
         <strong>{{ station.sensors.find(item => item.mes_type === measurement.data.name).name }}:</strong>
@@ -27,12 +31,16 @@ export default class CurrentDisplay extends Vue {
   @Prop() data!: Measurement[]
   @Prop() lastUpdated!: string
 
+  lastData: string = 'No data'
+
   get latest (): Measurement[] {
     let latestData = new Map<string, Measurement>()
 
     for (let measurement of this.data) {
       if (measurement.platform == this.station.id) {
         latestData.set(measurement.data.name, measurement)
+        this.lastData = new Date(measurement.timestamp).toISOString()
+          .replace('T', ' ').slice(0, 19) + ' Z'
       }
     }
 

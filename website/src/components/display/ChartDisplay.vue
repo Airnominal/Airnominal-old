@@ -7,13 +7,11 @@
       <v-btn small color="blue" text @click="zoomSet(60)">Last 60min</v-btn>
       <v-btn small color="blue" text @click="zoomSet(10)">Last 10min</v-btn>
     </v-card-actions>
-    <!--
-    <v-card-actions class="mt-n3 text-actions">
+    <v-card-actions class="mt-n4 text-actions">
       <span class="ps-3">Range:</span>
-      <v-text-field dense hide-details type="datetime-local" class="inline-input mt-n2 mx-2">Test</v-text-field> —
-      <v-text-field dense hide-details type="datetime-local" class="inline-input mt-n2 mx-2">Test</v-text-field>
+      <v-text-field dense hide-details type="datetime-local" class="inline-input mt-n1 mx-2" v-model="rangeStart" @change="handleRangeSelection" /> —
+      <v-text-field dense hide-details type="datetime-local" class="inline-input mt-n1 mx-2" v-model="rangeEnd" @change="handleRangeSelection" />
     </v-card-actions>
-    -->
   </v-card>
 </template>
 
@@ -34,7 +32,7 @@
 
 <script lang="ts">
 import VComp from '@vue/composition-api'
-import { Component, Prop, Ref, Vue, Watch } from 'vue-property-decorator'
+import { Component, Prop, Ref, VModel, Vue, Watch } from 'vue-property-decorator'
 import { ExtractComponentData, LineChart } from 'vue-chart-3'
 import { Chart, ChartOptions, LinearScaleOptions, registerables } from 'chart.js'
 import zoomPlugin from 'chartjs-plugin-zoom'
@@ -67,6 +65,9 @@ export default class TextDisplay extends Vue {
 
   @Ref() readonly chart!: ExtractComponentData<typeof LineChart>
 
+  rangeStart: string | null = null
+  rangeEnd: string | null = null
+
   currentZoom?: number
   userZoom = false
 
@@ -81,11 +82,16 @@ export default class TextDisplay extends Vue {
 
     // Set query params to the current zoom
     const setQueryParams = (context: { chart: Chart }) => {
+      if (!this.userZoom) return
+
       const oldQuery = this.$router.currentRoute.query
       const newQuery = { ...oldQuery }
 
       newQuery.from = new Date(context.chart.scales.x.min).toISOString()
       newQuery.to = new Date(context.chart.scales.x.max).toISOString()
+
+      this.rangeStart = newQuery.from.substring(0, 16)
+      this.rangeEnd = newQuery.to.substring(0, 16)
 
       if (oldQuery.from !== newQuery.from || oldQuery.to !== newQuery.to) {
         this.$router.replace({ query: newQuery })
@@ -101,12 +107,14 @@ export default class TextDisplay extends Vue {
 
     // Allow setting from and to dates using query params
     if (fromDate || toDate) {
+      this.userZoom = true
       const chart = this.chart.chartInstance
       chart?.zoomScale('x', {
         min: fromDate || chart.scales.x.min,
         max: toDate || chart.scales.x.max
       }, 'none')
-      this.userZoom = true
+      this.rangeStart = new Date(fromDate).toISOString().substring(0, 16)
+      this.rangeEnd = new Date(toDate).toISOString().substring(0, 16)
       return
     }
 
@@ -121,10 +129,14 @@ export default class TextDisplay extends Vue {
     delete query.from
     delete query.to
 
+    this.rangeStart = null
+    this.rangeEnd = null
+
     if (needsChange) this.$router.replace({ query: query })
   }
 
   zoomReset (): void {
+    this.userZoom = false
     this.resetQueryParams()
 
     this.chart.chartInstance?.resetZoom('none')
@@ -132,8 +144,9 @@ export default class TextDisplay extends Vue {
     this.userZoom = false
   }
 
-  zoomSet (minutes: number): void {
-    this.resetQueryParams()
+  zoomSet (minutes: number, force = true): void {
+    this.userZoom = false
+    if (force) this.resetQueryParams()
 
     const chart = this.chart.chartInstance
     const scaleBounds = chart?.getInitialScaleBounds().x!
@@ -144,7 +157,29 @@ export default class TextDisplay extends Vue {
 
     chart?.zoomScale('x', { min: dataMin, max: dataMax }, 'none')
     this.currentZoom = minutes
-    this.userZoom = false
+  }
+
+  handleRangeSelection (): void {
+    const oldQuery = this.$router.currentRoute.query
+    const newQuery = { ...oldQuery }
+    this.userZoom = true
+
+    if (this.rangeStart) newQuery.from = this.rangeStart
+    else delete newQuery.from
+
+    if (this.rangeEnd) newQuery.to = this.rangeEnd
+    else delete newQuery.to
+
+    if (oldQuery.from !== newQuery.from || oldQuery.to !== newQuery.to) {
+      this.$router.replace({ query: newQuery })
+    }
+
+    const chart = this.chart.chartInstance
+    const scaleBounds = chart?.getInitialScaleBounds().x!
+    chart?.zoomScale('x', {
+      min: this.rangeStart ? Date.parse(this.rangeStart) : scaleBounds.min,
+      max: this.rangeEnd ? Date.parse(this.rangeEnd) :  scaleBounds.max
+    }, 'none')
   }
 
   options: ChartOptions<'line'> = {
@@ -245,8 +280,7 @@ export default class TextDisplay extends Vue {
     if (this.userZoom) return
 
     this.chart.chartInstance?.resetZoom('none')
-    if (this.currentZoom) this.zoomSet(this.currentZoom)
+    if (this.currentZoom) this.zoomSet(this.currentZoom, false)
   }
-
 }
 </script>
