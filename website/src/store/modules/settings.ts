@@ -12,6 +12,8 @@ export enum ThemeType {
 class Settings extends VuexModule {
   enablePullToRefresh = false
   storeRangeInURL = true
+  displayCurrentData = true
+  displayCharts = true
   updateInterval = 10
   theme: ThemeType = ThemeType.System
 
@@ -23,6 +25,16 @@ class Settings extends VuexModule {
   @Mutation
   setStoreRangeInURL (storeRangeInURL: boolean): void {
     this.storeRangeInURL = storeRangeInURL
+  }
+
+  @Mutation
+  setDisplayCurrentData (displayCurrentData: boolean): void {
+    this.displayCurrentData = displayCurrentData
+  }
+
+  @Mutation
+  setDisplayCharts (displayCharts: boolean): void {
+    this.displayCharts = displayCharts
   }
 
   @Mutation

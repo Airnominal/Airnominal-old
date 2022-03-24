@@ -31,6 +31,8 @@
     -->
 
     <settings-switch v-model="storeRangeInURL" label="Store Chart Range in URL" />
+    <settings-switch v-model="displayCurrentData" label="Display Current Data" />
+    <settings-switch v-model="displayCharts" label="Display Charts" />
 
     <v-divider class="my-6" />
 
@@ -161,6 +163,22 @@ export default class Settings extends Vue {
 
   set storeRangeInURL (storeRangeInURL: boolean) {
     SettingsModule.setStoreRangeInURL(storeRangeInURL)
+  }
+
+  get displayCurrentData (): boolean {
+    return SettingsModule.displayCurrentData
+  }
+
+  set displayCurrentData (displayCurrentData: boolean) {
+    SettingsModule.setDisplayCurrentData(displayCurrentData)
+  }
+
+  get displayCharts (): boolean {
+    return SettingsModule.displayCharts
+  }
+
+  set displayCharts (displayCharts: boolean) {
+    SettingsModule.setDisplayCharts(displayCharts)
   }
 
   // TODO: Add other toggles here
