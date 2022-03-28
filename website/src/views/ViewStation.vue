@@ -1,7 +1,7 @@
 <template>
   <div v-if="isReady">
     <v-row class="px-4 pt-4">
-      <v-col class="ps-4 pt-4" cols="12" style="max-width: 420px;">
+      <v-col v-if="displayCurrentData" class="ps-4 pt-4" cols="12" style="max-width: 420px;">
         <v-card class="pb-4" tile outlined>
           <div class="pt-4 px-4 text-h6">Current Data</div>
           <div class="pt-4 px-4" v-for="station in stations" :key="station.id">
@@ -9,13 +9,19 @@
           </div>
         </v-card>
       </v-col>
-      <v-col class="ps-4 pt-4" cols="12" style="max-width: 700px;" v-for="sensor in sensors" :key="sensor.mes_type">
+      <v-col v-if="displayCharts" class="ps-4 pt-4" cols="12" style="max-width: 700px;" v-for="sensor in sensors" :key="sensor.mes_type">
         <chart-display :stations="stations" :data="data" :type="sensor" />
       </v-col>
     </v-row>
   </div>
   <loading v-else />
 </template>
+
+<style lang="scss">
+.v-card__actions {
+  flex-wrap: wrap !important;
+}
+</style>
 
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator'
@@ -38,6 +44,14 @@ export default class ViewStation extends Vue {
   stations: Station[] = []
   sensors: Sensor[] = []
   data: Measurement[] = []
+
+  get displayCurrentData (): boolean {
+    return SettingsModule.displayCurrentData
+  }
+
+  get displayCharts (): boolean {
+    return SettingsModule.displayCharts
+  }
 
   async created (): Promise<void> {
     const stationIds = this.$route.params.stations.split(',')
