@@ -38,6 +38,10 @@ export default class Home extends Vue {
     let fetchData = async () => { this.stations = (await getStations())[0] }
     this.updater = setInterval(fetchData, SettingsModule.updateInterval * 1000)
     fetchData()
+
+    // Set page title
+    document.title = process.env.VUE_APP_TITLE
+    this.$emit('setPageTitle', 'Airnominal')
   }
 
   destroyed (): void {

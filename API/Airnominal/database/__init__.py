@@ -10,8 +10,8 @@ Session = sessionmaker()
 class Station(Base):
     __tablename__ = "stations"
     id = Column(Integer, primary_key=True)
-    name = Column(String)
-    key = Column(String)
+    name = Column(String(256))
+    key = Column(String(256))
     sensors = relationship("Sensor")
     _password = Column(String(128))
 
@@ -22,14 +22,14 @@ class Station(Base):
     def set_password(self, plaintext):
         salt = bcrypt.gensalt()
         self._password = bcrypt.hashpw(plaintext.encode('utf8'), salt)
-    
+
     def is_correct_password(self, plaintext):
         return bcrypt.checkpw(plaintext.encode('utf8'), self._password)
 
 class Sensor(Base):
     __tablename__ = "sensors"
     id = Column(Integer, primary_key=True, autoincrement=True)
-    modelname =  Column(String)
+    modelname =  Column(String(256))
     station_id = Column(Integer, ForeignKey('stations.id'))
     Station = relationship("Station", back_populates="sensors")
     measurements = relationship("Measurement")
@@ -39,8 +39,8 @@ class Sensor(Base):
 class MeasurementType(Base):
     __tablename__ = "types"
     id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String, unique=True)
-    unit = Column(String)
+    name = Column(String(256), unique=True)
+    unit = Column(String(256))
     sensors = relationship("Sensor")
 
 class Measurement(Base):
