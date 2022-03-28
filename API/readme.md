@@ -151,7 +151,7 @@ GET /measurements?platform=AAAAAA,BBBBBB&measurements=temperature,humidity,pm10,
 
 - `to`: Do kdaj naj bodo meritve, isto ISO format. Če ni podan, vrne vse, kar ima.
   **Response:**
-
+  
   ```json5
   [ // Seznam vseh meritev/skupin meritev, ki ustrezajo pogojem iz requesta
     {
@@ -167,7 +167,21 @@ GET /measurements?platform=AAAAAA,BBBBBB&measurements=temperature,humidity,pm10,
     }
   ]
   ```
-
+  
   ## Step 4: Shranjevanje in prikazovanje podatkov
-
-  Iz pridobljenih podatkov odstrani vse podvojene (če bi slučajno večkrat naredil isti request ali pa kaj takega), jih shrani (verjetno v `localStorage`) in jih prikaže na grafih.
+  
+  Iz pridobljenih podatkov odstrani vse podvojene (če bi slučajno večkrat naredil isti request ali pa kaj takega), jih shrani (verjetno v `localStorage`) in jih prikaže na grafih.d
+  
+  # Pošiljanje podatkov iz arduina
+  
+  ```json5
+  {
+      "k": "aRKJDFNA23546" //key, po nove v base 64 da vzame manj placa
+      "iST": "H3" // id Station, zapisano v base 64 da vzame manj placa
+      "iSE": "T4" // id Senzorja, spet v base 64
+      "v": 33.2 // value, kjer postaja je
+      "lat": 56.4 // latitude
+      "lon" : 33.6 // longitude
+      "uT" : 15982374592873 // unixTime epcho
+  }
+  ```

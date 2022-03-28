@@ -4,11 +4,11 @@ from json import dumps
 from schema import Optional, Or, Schema, SchemaError
 from ..database import Measurement, Station, Sensor, MeasurementType
 from ..utils import returnError
-from secrets import token_hex
+from secrets import token_urlsafe
 from ..database import Session
 from datetime import datetime
 from dateutil import parser
-
+import msgpack
 class PlatformsHandler:
     def __init__(self):
         self.session =  Session()
@@ -53,7 +53,7 @@ class PlatformsHandler:
             except Exception as err:
                 print(err)
                 return returnError("schema not validated")
-            key = token_hex()
+            key = token_urlsafe()
             station = Station(name = con["name"])
             station.set_password(key)
             s = []
@@ -195,6 +195,65 @@ class PlatformsHandler:
             self.session.commit()
             response.headers["Content-Type"] = "application/json"
             return response
+        @self.reg.route("/mes/msG", methods = ['POST'])
+        def shortMSGPCKapi():
+            schema = Schema([{
+                "k": str, #key, po nove v base 64 da vzame manj placa
+                "iST": str, # id Station, zapisano v base 64 da vzame manj placa
+                "iSE": str, # id Senzorja, spet v base 64
+                "v":  Or(int, float),# value, kjer postaja je
+                "lat": Or(int, float), # latitude
+                "lon" : Or(int, float), # longitude
+            }])
+            pckg = msgpack.unpackb(request.get_data(), raw=False)
+            try:
+                con = schema.validate(pckg)
+            except Exception as error:
+                print(error)
+                return returnError("First schema not validated")
+            for stat in con:
+                s = self.session.query(Station).filter(Station.id == int(stat["iST"])).all()
+                if not s:
+                    return returnError("Station id " + stat["iST"] + " does not exist")
+                s = s[0]
+                if not s.is_correct_password(stat["k"]):
+                    return returnError("Wrong password")
+                se = self.session.query(Sensor).filter(Sensor.id == int(stat["iSE"])).all()
+                if not se:
+                    return returnError("Sensor id " + se["sen_id"] + " does not exist")
+                se = se[0]
+                time = None
+                '''
+                if "isoTime" in mes.keys():
+                    try:
+                        time = parser.parse(mes["isoTime"])
+                    except:
+                        return returnError(mes["isoTime"] + " is not valid iso format timestamp")
+                elif "unixTime" in mes.keys():
+                    try:
+                        time = datetime.utcfromtimestamp(mes["unixTime"])
+                    except:
+                        return returnError(mes["unixTime"] + " is not valid unix format timestamp")
+                else:
+                '''
+                time = datetime.now()
+                m = Measurement(value = stat["v"], datetime=time, lon=stat["lon"], lat=stat["lat"])
+                self.session.add(m)
+                se.measurements.append(m)
+            response = make_response(
+                jsonify(
+                    {
+                        "success": True,
+                    }
+                ),
+                200,
+            )
+            self.session.commit()
+            response.headers["Content-Type"] = "application/json"
+            return response
+                
+            
+
 
 
 
