@@ -1,4 +1,5 @@
 from os import stat
+from urllib import response
 from flask import Blueprint, request, jsonify, make_response
 from json import dumps
 from schema import Optional, Or, Schema, SchemaError
@@ -123,6 +124,7 @@ class PlatformsHandler:
                 200,
             )
             response.headers["Content-Type"] = "application/json"
+            self.session.commit()
             return response
         @self.reg.route("/new/mes", methods = ['POST'])
         def submitMeasurements():
@@ -251,6 +253,12 @@ class PlatformsHandler:
             self.session.commit()
             response.headers["Content-Type"] = "application/json"
             return response
+        @self.reg.route("/ping")
+        def ping():
+            response = make_response("PONG", 200)
+            response.headers["Content-Type"] = "plain/text"
+            return response
+
                 
             
 
