@@ -25,7 +25,7 @@ class DisplayHandler:
                 Optional("measurements"): str,
                 Optional("from"): str,
                 Optional("to"): str
-            })
+            }, ignore_extra_keys=True)
             sen = self.session.query(Sensor)
             try:
                 con = schema.validate(all_args)

@@ -25,6 +25,7 @@ export async function getMeasurements (platforms?: string[], measurements?: stri
   if (from) params.set('from', from)
   if (platforms?.length) params.set('platform', platforms.join(','))
   if (measurements?.length) params.set('measurements', measurements.join(','))
+  params.set('_now', String(Date.now()))
 
   try {
     const response = await fetchHandle(process.env.VUE_APP_BACKEND + '/measurements?' + params.toString())
