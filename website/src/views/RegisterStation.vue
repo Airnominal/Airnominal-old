@@ -150,8 +150,8 @@ export default class RegisterStation extends Vue {
 
   async created (): Promise<void> {
     // Set page title
-    document.title = process.env.VUE_APP_TITLE + ' – Register station'
-    this.$emit('setPageTitle', 'Register station')
+    document.title = process.env.VUE_APP_TITLE + ' – Register Station'
+    this.$emit('setPageTitle', 'Register Station')
     this.$emit('setPullToRefreshAllowed', false)
 
     // Get measurement types from the API

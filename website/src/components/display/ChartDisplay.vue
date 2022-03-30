@@ -32,7 +32,7 @@
 
 <script lang="ts">
 import VComp from '@vue/composition-api'
-import { Component, Prop, Ref, VModel, Vue, Watch } from 'vue-property-decorator'
+import { Component, Prop, Ref, Vue, Watch } from 'vue-property-decorator'
 import { ExtractComponentData, LineChart } from 'vue-chart-3'
 import { Chart, ChartOptions, LinearScaleOptions, registerables } from 'chart.js'
 import zoomPlugin from 'chartjs-plugin-zoom'
@@ -41,26 +41,11 @@ import 'chartjs-adapter-date-fns'
 import { Sensor, Station } from '@/utils/getStations'
 import { Measurement } from '@/utils/getMeasurements'
 import { SettingsModule } from '@/store/modules/settings'
+import { getColor } from '@/utils/colors'
+import { getLocalISOString } from '@/utils/date'
 
 Chart.register(zoomPlugin, ...registerables)
 Vue.use(VComp)
-
-const colors = [
-  '#F44336',
-  '#9C27B0',
-  '#3F51B5',
-  '#00BCD4',
-  '#4CAF50',
-  '#CDDC39',
-  '#FFC107',
-  '#FF5722'
-]
-
-function getLocalISOString (date: number | string | Date): string {
-  date = new Date(date)
-  date.setMinutes(date.getMinutes() - date.getTimezoneOffset())
-  return date.toISOString().slice(0, 16)
-}
 
 @Component({
   components: { LineChart }
@@ -263,7 +248,7 @@ export default class TextDisplay extends Vue {
     let values: number[] = []
 
     for (const platform of this.stations) {
-      const color = colors[parseInt(platform.id) % colors.length]
+      const color = getColor(parseInt(platform.id))
       const current = source.filter(item => item.platform == platform.id)
 
       values.push(...current.map(value => value.data.value))
@@ -286,7 +271,7 @@ export default class TextDisplay extends Vue {
   }
 
   @Watch('measurements')
-  onMeasurementsChange() {
+  onMeasurementsChanged () {
     // If user has not explicitly zoomed in, re-zoom to show the latest data
     if (this.userZoom) return
 
