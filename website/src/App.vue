@@ -23,6 +23,16 @@
       -->
 
       <v-btn v-if="isNavigationDisplayed"
+        :to="{ name: 'registerStation' }"
+        alt="Register station"
+        aria-label="Register station"
+        class="mr-1"
+        icon
+        large>
+        <v-icon>{{ mdiServerPlus }}</v-icon>
+      </v-btn>
+
+      <v-btn v-if="isNavigationDisplayed"
         :to="{ name: 'settings' }"
         alt="Settings"
         aria-label="Settings"
@@ -106,7 +116,7 @@ html, body {
 </style>
 
 <script lang="ts">
-import { mdiCog, mdiRss } from '@mdi/js'
+import { mdiServerPlus, mdiCog, mdiRss } from '@mdi/js'
 import PullToRefresh from 'pulltorefreshjs'
 import { Component, Vue } from 'vue-property-decorator'
 
@@ -120,6 +130,7 @@ import { displaySnackbar, hideSnackbar } from '@/utils/snackbar'
   }
 })
 export default class App extends Vue {
+  mdiServerPlus = mdiServerPlus
   mdiCog = mdiCog
   mdiRss = mdiRss
 
