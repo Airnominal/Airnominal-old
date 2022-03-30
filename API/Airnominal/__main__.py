@@ -88,7 +88,7 @@ def main(as_module=False):
 
         rv = set(super(FlaskGroup, self).list_commands(ctx))
         info = ctx.ensure_object(ScriptInfo)
-
+        os.environ["AIRNOMINAL_CONFIG"] = "config.yaml"
         try:
             rv.update(info.load_app().cli.list_commands(ctx))
         except ConfigError as error:

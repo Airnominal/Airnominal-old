@@ -208,40 +208,44 @@ class PlatformsHandler:
                 "lon" : Or(int, float), # longitude
             }])
             pckg = msgpack.unpackb(request.get_data(), raw=False)
+            print(pckg)
             try:
                 con = schema.validate(pckg)
             except Exception as error:
                 print(error)
                 return returnError("First schema not validated")
             for stat in con:
-                s = self.session.query(Station).filter(Station.id == int(stat["iST"])).all()
-                if not s:
-                    return returnError("Station id " + stat["iST"] + " does not exist")
-                s = s[0]
-                if not s.is_correct_password(stat["k"]):
-                    return returnError("Wrong password")
-                se = self.session.query(Sensor).filter(Sensor.id == int(stat["iSE"])).all()
-                if not se:
-                    return returnError("Sensor id " + se["sen_id"] + " does not exist")
-                se = se[0]
-                time = None
-                '''
-                if "isoTime" in mes.keys():
-                    try:
-                        time = parser.parse(mes["isoTime"])
-                    except:
-                        return returnError(mes["isoTime"] + " is not valid iso format timestamp")
-                elif "unixTime" in mes.keys():
-                    try:
-                        time = datetime.utcfromtimestamp(mes["unixTime"])
-                    except:
-                        return returnError(mes["unixTime"] + " is not valid unix format timestamp")
-                else:
-                '''
-                time = datetime.now()
-                m = Measurement(value = stat["v"], datetime=time, lon=stat["lon"], lat=stat["lat"])
-                self.session.add(m)
-                se.measurements.append(m)
+                try:
+                    s = self.session.query(Station).filter(Station.id == int(stat["iST"])).all()
+                    if not s:
+                        return returnError("Station id " + stat["iST"] + " does not exist")
+                    s = s[0]
+                    if not s.is_correct_password(stat["k"]):
+                        return returnError("Wrong password")
+                    se = self.session.query(Sensor).filter(Sensor.id == int(stat["iSE"])).all()
+                    if not se:
+                        return returnError("Sensor id " + se["sen_id"] + " does not exist")
+                    se = se[0]
+                    time = None
+                    '''
+                    if "isoTime" in mes.keys():
+                        try:
+                            time = parser.parse(mes["isoTime"])
+                        except:
+                            return returnError(mes["isoTime"] + " is not valid iso format timestamp")
+                    elif "unixTime" in mes.keys():
+                        try:
+                            time = datetime.utcfromtimestamp(mes["unixTime"])
+                        except:
+                            return returnError(mes["unixTime"] + " is not valid unix format timestamp")
+                    else:
+                    '''
+                    time = datetime.now()
+                    m = Measurement(value = stat["v"], datetime=time, lon=stat["lon"], lat=stat["lat"])
+                    self.session.add(m)
+                    se.measurements.append(m)
+                except Exception as e:
+                    print(e)
             response = make_response(
                 jsonify(
                     {
