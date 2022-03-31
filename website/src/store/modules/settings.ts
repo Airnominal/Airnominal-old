@@ -14,6 +14,7 @@ class Settings extends VuexModule {
   storeRangeInURL = true
   displayCurrentData = true
   displayCharts = true
+  displayMaps = true
   updateInterval = 10
   theme: ThemeType = ThemeType.System
 
@@ -35,6 +36,11 @@ class Settings extends VuexModule {
   @Mutation
   setDisplayCharts (displayCharts: boolean): void {
     this.displayCharts = displayCharts
+  }
+
+  @Mutation
+  setDisplayMaps (displayMaps: boolean): void {
+    this.displayMaps = displayMaps
   }
 
   @Mutation

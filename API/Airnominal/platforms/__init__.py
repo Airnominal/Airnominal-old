@@ -48,7 +48,7 @@ class PlatformsHandler:
                         "mes_type": str,
                     }
                 ],
-            })
+            }, ignore_extra_keys=True)
             try:
                 con = schema.validate(request.json)
             except Exception as err:
@@ -263,8 +263,8 @@ class PlatformsHandler:
             response.headers["Content-Type"] = "plain/text"
             return response
 
-                
-            
+
+
 
 
 

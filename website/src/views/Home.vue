@@ -16,6 +16,12 @@
   </v-row>
 </template>
 
+<style lang="scss">
+.v-list.v-sheet.theme--dark {
+  background-color: inherit;
+}
+</style>
+
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator'
 

@@ -12,6 +12,9 @@
       <v-col v-if="displayCharts" class="ps-4 pt-4" cols="12" style="max-width: 700px;" v-for="sensor in sensors" :key="sensor.mes_type">
         <chart-display :stations="stations" :data="data" :type="sensor" />
       </v-col>
+      <v-col v-if="displayMaps && locationProvided" class="ps-4 pt-4" cols="12" style="max-width: 700px;">
+        <map-display :stations="stations" :data="data" />
+      </v-col>
     </v-row>
   </div>
   <loading v-else />
@@ -28,13 +31,14 @@ import { Component, Vue } from 'vue-property-decorator'
 
 import ChartDisplay from '@/components/display/ChartDisplay.vue'
 import CurrentDisplay from '@/components/display/CurrentDisplay.vue'
+import MapDisplay from '@/components/display/MapDisplay.vue'
 import Loading from '@/components/base/Loading.vue'
 import { getStations, Sensor, Station } from '@/utils/getStations'
 import { Measurement, getMeasurements } from '@/utils/getMeasurements'
 import { SettingsModule } from '@/store/modules/settings'
 
 @Component({
-  components: { CurrentDisplay, ChartDisplay, Loading }
+  components: { CurrentDisplay, ChartDisplay, MapDisplay, Loading }
 })
 export default class ViewStation extends Vue {
   isReady = false
@@ -45,12 +49,18 @@ export default class ViewStation extends Vue {
   sensors: Sensor[] = []
   data: Measurement[] = []
 
+  locationProvided = false
+
   get displayCurrentData (): boolean {
     return SettingsModule.displayCurrentData
   }
 
   get displayCharts (): boolean {
     return SettingsModule.displayCharts
+  }
+
+  get displayMaps (): boolean {
+    return SettingsModule.displayMaps
   }
 
   async created (): Promise<void> {
@@ -98,6 +108,7 @@ export default class ViewStation extends Vue {
 
       // Sort and save them
       this.data = [...combined.values()].sort((a, b) => (a.timestamp > b.timestamp) ? 1 : -1)
+      this.locationProvided = !!this.data[this.data.length - 1]?.coordinates
       this.lastUpdated = newUpdated
       console.log(this.data)
     }

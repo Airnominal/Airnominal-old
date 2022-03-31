@@ -6,6 +6,7 @@ Vue.use(VueRouter)
 const Home = () => import(/* webpackChunkName: "home" */ '../views/Home.vue')
 const NotFound = () => import(/* webpackChunkName: "notfound" */ '../views/NotFound.vue')
 const ViewStation = () => import(/* webpackChunkName: "viewstation" */ '../views/ViewStation.vue')
+const RegisterStation = () => import(/* webpackChunkName: "registerstation" */ '../views/RegisterStation.vue')
 const Subscribe = () => import(/* webpackChunkName: "subscribe" */ '../views/Subscribe.vue')
 const Settings = () => import(/* webpackChunkName: "settings" */ '../views/Settings.vue')
 
@@ -13,7 +14,8 @@ const routes: Array<RouteConfig> = [
   { path: '/', name: 'home', component: Home },
   { path: '*', name: 'notFound', component: NotFound },
   // TODO: Add pages here
-  { path: '/stations/:stations', name: 'viewStation', component: ViewStation },
+  { path: '/stations/view/:stations', name: 'viewStation', component: ViewStation },
+  { path: '/stations/register', name: 'registerStation', component: RegisterStation },
   { path: '/subscribe', name: 'subscribe', component: Subscribe },
   { path: '/settings', name: 'settings', component: Settings }
 ]

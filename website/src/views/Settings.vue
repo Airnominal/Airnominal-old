@@ -33,6 +33,7 @@
     <settings-switch v-model="storeRangeInURL" label="Store Chart Range in URL" />
     <settings-switch v-model="displayCurrentData" label="Display Current Data" />
     <settings-switch v-model="displayCharts" label="Display Charts" />
+    <settings-switch v-model="displayMaps" label="Display Maps" />
 
     <v-divider class="my-6" />
 
@@ -179,6 +180,14 @@ export default class Settings extends Vue {
 
   set displayCharts (displayCharts: boolean) {
     SettingsModule.setDisplayCharts(displayCharts)
+  }
+
+  get displayMaps (): boolean {
+    return SettingsModule.displayMaps
+  }
+
+  set displayMaps (displayMaps: boolean) {
+    SettingsModule.setDisplayMaps(displayMaps)
   }
 
   // TODO: Add other toggles here

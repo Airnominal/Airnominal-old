@@ -23,7 +23,7 @@ export async function getStations (): Promise<[Station[], boolean]> {
   }
 
   try {
-    const response = await fetchHandle(process.env.VUE_APP_BACKEND + '/platforms')
+    const response = await fetchHandle(process.env.VUE_APP_BACKEND + '/platforms?_now=' + Date.now())
     stationsStore = await response.json()
     return [stationsStore, true]
   } catch (error) {

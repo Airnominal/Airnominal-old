@@ -24,6 +24,7 @@ import { Component, Prop, Vue } from 'vue-property-decorator'
 
 import { Station } from '@/utils/getStations'
 import { Measurement } from '@/utils/getMeasurements'
+import { getLocalISOString } from '@/utils/date'
 
 @Component
 export default class CurrentDisplay extends Vue {
@@ -39,7 +40,7 @@ export default class CurrentDisplay extends Vue {
     for (let measurement of this.data) {
       if (measurement.platform == this.station.id) {
         latestData.set(measurement.data.name, measurement)
-        this.lastData = new Date(measurement.timestamp).toISOString()
+        this.lastData = getLocalISOString(measurement.timestamp)
           .replace('T', ' ').slice(0, 19) + ' Z'
       }
     }
