@@ -207,7 +207,7 @@ class PlatformsHandler:
                 "lat": Or(int, float), # latitude
                 "lon" : Or(int, float), # longitude
             }])
-            pckg = msgpack.unpackb(request.get_data(), raw=False)
+            pckg = msgpack.unpackb(request.get_data(), raw=False, unicode_errors="ignore")
             print(pckg)
             try:
                 con = schema.validate(pckg)
@@ -220,8 +220,8 @@ class PlatformsHandler:
                     if not s:
                         return returnError("Station id " + stat["iST"] + " does not exist")
                     s = s[0]
-                    if not s.is_correct_password(stat["k"]):
-                        return returnError("Wrong password")
+                    #if not s.is_correct_password(stat["k"]):
+                    #    return returnError("Wrong password")
                     se = self.session.query(Sensor).filter(Sensor.id == int(stat["iSE"])).all()
                     if not se:
                         return returnError("Sensor id " + se["sen_id"] + " does not exist")
