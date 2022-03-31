@@ -1,18 +1,18 @@
 <template>
   <div v-if="isReady">
     <v-row class="px-4 pt-4">
-      <v-col v-if="displayCurrentData" class="ps-4 pt-4" cols="12" style="max-width: 420px;">
-        <v-card class="pb-4" tile outlined>
+      <v-col v-if="displayCurrentData" class="ps-4 pt-4 current-data-col" cols="12">
+        <v-card class="pb-4 current-data-card" tile outlined>
           <div class="pt-4 px-4 text-h6">Current Data</div>
           <div class="pt-4 px-4" v-for="station in stations" :key="station.id">
             <current-display :station="station" :data="data" :last-updated="lastUpdated" />
           </div>
         </v-card>
       </v-col>
-      <v-col v-if="displayCharts" class="ps-4 pt-4" cols="12" style="max-width: 700px;" v-for="sensor in sensors" :key="sensor.mes_type">
+      <v-col v-if="displayCharts" class="ps-4 pt-4 charts-col" cols="12" v-for="sensor in sensors" :key="sensor.mes_type">
         <chart-display :stations="stations" :data="data" :type="sensor" />
       </v-col>
-      <v-col v-if="displayMaps && locationProvided" class="ps-4 pt-4" cols="12" style="max-width: 700px;">
+      <v-col v-if="displayMaps && locationProvided" class="ps-4 pt-4 map-col" cols="12">
         <map-display :stations="stations" :data="data" />
       </v-col>
     </v-row>
@@ -23,6 +23,20 @@
 <style lang="scss">
 .v-card__actions {
   flex-wrap: wrap !important;
+}
+
+@media (min-width: 1174px) {
+  .charts-col, .map-col {
+    max-width: 700px;
+  }
+
+  .current-data-col {
+    max-width: 370px
+  }
+
+  .current-data-card {
+    min-height: 504px;
+  }
 }
 </style>
 

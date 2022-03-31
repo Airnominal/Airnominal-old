@@ -8,7 +8,8 @@
         :visible="marker.visible"
         :draggable="marker.draggable"
         :lat-lng.sync="marker.position"
-        :icon="marker.icon">
+        :icon="marker.icon"
+        @click="marker.onclick ? marker.onclick(marker) : () => {}">
         <l-tooltip :content="marker.tooltip" :options="{ permanent: true }" />
       </l-marker>
       <l-polyline
@@ -22,48 +23,19 @@
   </v-card>
 </template>
 
-<style lang="scss">
-
-</style>
-
 <script lang="ts">
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator'
 import { LMap, LTileLayer, LMarker, LTooltip, LPolyline } from 'vue2-leaflet'
-import { Icon, LatLngBounds, LatLngExpression, latLngBounds } from 'leaflet'
+import { LatLngBounds, latLngBounds } from 'leaflet'
 
 import { Station } from '@/utils/getStations'
 import { Measurement } from '@/utils/getMeasurements'
+import { getColor } from '@/utils/colors'
+import { fixMarkerIcons, Marker, Polyline } from '@/utils/map'
 
 import 'leaflet/dist/leaflet.css'
-import { getColor } from '@/utils/colors'
 
-// Fix for missing marker icons
-// See: https://vue2-leaflet.netlify.app/quickstart/#marker-icons-are-missing
-type IconDefault = Icon.Default & {
-  _getIconUrl?: string;
-}
-delete (Icon.Default.prototype as IconDefault)._getIconUrl
-Icon.Default.mergeOptions({
-  iconRetinaUrl: require('leaflet/dist/images/marker-icon-2x.png'),
-  iconUrl: require('leaflet/dist/images/marker-icon.png'),
-  shadowUrl: require('leaflet/dist/images/marker-shadow.png'),
-})
-
-type Marker = {
-  id?: string,
-  visible?: boolean,
-  draggable?: boolean,
-  position?: LatLngExpression,
-  icon?: Icon,
-  tooltip?: string,
-}
-
-type Polyline = {
-  id?: string,
-  visible?: boolean,
-  color?: string,
-  points?: LatLngExpression[],
-}
+fixMarkerIcons()
 
 @Component({
   components: { LMap, LTileLayer, LMarker, LTooltip, LPolyline }
@@ -104,9 +76,8 @@ export default class TextDisplay extends Vue {
     const markers = [...latestLocations.values()]
     const polylines = [...locationHistories.values()]
     const bounds = latLngBounds(markers.map(marker => marker.position || [0, 0]))
-    bounds.pad(0.5)
 
-    this.bounds = bounds
+    this.bounds = bounds.pad(0.05)
     this.markers = markers
     this.polylines = polylines
   }

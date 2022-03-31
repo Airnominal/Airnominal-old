@@ -14,6 +14,7 @@ export interface Measurement {
 }
 
 let measurementsStore: Measurement[] = []
+let latestMeasurementsStore: Measurement[] = []
 
 export async function getMeasurements (platforms?: string[], measurements?: string[], from?: string): Promise<[Measurement[], boolean]> {
   if (!navigator.onLine) {
@@ -35,5 +36,22 @@ export async function getMeasurements (platforms?: string[], measurements?: stri
     displaySnackbar('Error while accessing data')
     console.error(error)
     return [measurementsStore, false]
+  }
+}
+
+export async function getLatestMeasurements (): Promise<[Measurement[], boolean]> {
+  if (!navigator.onLine) {
+    displaySnackbar('No internet connection')
+    return [latestMeasurementsStore, false]
+  }
+
+  try {
+    const response = await fetchHandle(process.env.VUE_APP_BACKEND + '/measurements/latest?_now=' + Date.now())
+    latestMeasurementsStore = await response.json()
+    return [latestMeasurementsStore, true]
+  } catch (error) {
+    displaySnackbar('Error while accessing data')
+    console.error(error)
+    return [latestMeasurementsStore, false]
   }
 }

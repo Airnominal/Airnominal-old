@@ -3,30 +3,20 @@
 <template>
   <v-navigation-drawer :mini-variant="!isNavigationExpanded" app clipped mini-variant-width="72" permanent>
     <v-list rounded class="pt-6">
-      <!-- TODO: Add pages here -->
-
-      <v-list-item link :to="{ name: 'timetable' }">
+      <v-list-item link :to="{ name: 'stationsList' }">
         <v-list-item-icon>
-          <v-icon>{{ mdiTimetable }}</v-icon>
+          <v-icon>{{ mdiFormatListBulleted }}</v-icon>
         </v-list-item-icon>
         <v-list-item-content>
-          <v-list-item-title>Urnik</v-list-item-title>
+          <v-list-item-title>Stations List</v-list-item-title>
         </v-list-item-content>
       </v-list-item>
-      <v-list-item link :to="{ name: 'menus' }">
+      <v-list-item link :to="{ name: 'stationsMap' }">
         <v-list-item-icon>
-          <v-icon>{{ mdiFood }}</v-icon>
+          <v-icon>{{ mdiMap }}</v-icon>
         </v-list-item-icon>
         <v-list-item-content>
-          <v-list-item-title>Jedilnik</v-list-item-title>
-        </v-list-item-content>
-      </v-list-item>
-      <v-list-item link :to="{ name: 'documents' }">
-        <v-list-item-icon>
-          <v-icon>{{ mdiNewspaper }}</v-icon>
-        </v-list-item-icon>
-        <v-list-item-content>
-          <v-list-item-title>Okrožnice</v-list-item-title>
+          <v-list-item-title>Stations Map</v-list-item-title>
         </v-list-item-content>
       </v-list-item>
     </v-list>
@@ -54,14 +44,13 @@
 </style>
 
 <script lang="ts">
-import { mdiChevronLeft, mdiChevronRight, mdiFood, mdiNewspaper, mdiTimetable } from '@mdi/js'
+import { mdiChevronLeft, mdiChevronRight, mdiFormatListBulleted, mdiMap } from '@mdi/js'
 import { Component, Vue } from 'vue-property-decorator'
 
 @Component
 export default class ViewNavigationDesktop extends Vue {
-  mdiTimetable = mdiTimetable
-  mdiFood = mdiFood
-  mdiNewspaper = mdiNewspaper
+  mdiFormatListBulleted  = mdiFormatListBulleted
+  mdiMap = mdiMap
 
   mdiChevronRight = mdiChevronRight
   mdiChevronLeft = mdiChevronLeft

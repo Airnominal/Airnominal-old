@@ -43,13 +43,13 @@
       </v-btn>
     </v-app-bar>
 
-    <!-- TODO: Navigation -->
-    <!-- <view-navigation-desktop v-if="isNavigationDisplayed && !isMobile" /> -->
+    <view-navigation-desktop v-if="isNavigationDisplayed && !isMobile" />
 
     <v-main id="main">
       <span id="ptr--target"></span>
       <v-container fluid>
         <router-view
+          class="router-view"
           @setNavigationDisplay=setNavigationDisplay
           @setPageTitle=setPageTitle
           @setPullToRefreshAllowed=setPullToRefreshAllowed />
@@ -66,8 +66,7 @@
       </template>
     </v-snackbar>
 
-    <!-- TODO: Navigation -->
-    <!-- <view-navigation-mobile v-if="isNavigationDisplayed && isMobile" /> -->
+    <view-navigation-mobile v-if="isNavigationDisplayed && isMobile" />
   </v-app>
 </template>
 
@@ -112,6 +111,18 @@ html, body {
 // Move snackbar a bit more to the top so it doesn't hide navigation
 .v-snack {
   padding-bottom: 60px !important;
+}
+
+// Add padding when mobile navigation is displayed
+@media (max-width: 1063.75px) {
+  .router-view {
+    padding-bottom: 64px;
+  }
+}
+
+// Prevent maps from overlapping other elements
+.vue2leaflet-map {
+  z-index: 2;
 }
 </style>
 
