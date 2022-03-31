@@ -24,7 +24,12 @@ class Station(Base):
         self._password = bcrypt.hashpw(plaintext.encode('utf8'), salt)
 
     def is_correct_password(self, plaintext):
-        return bcrypt.checkpw(plaintext.encode('utf8'), self._password)
+        password = self._password
+        if isinstance(plaintext, str):
+            plaintext = plaintext.encode('utf8')
+        if isinstance(password, str):
+            password = password.encode('utf8')
+        return bcrypt.checkpw(plaintext, password)
 
 class Sensor(Base):
     __tablename__ = "sensors"
