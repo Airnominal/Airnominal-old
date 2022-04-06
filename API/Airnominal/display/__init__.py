@@ -1,7 +1,7 @@
 import json
 from os import stat
 import sched
-from flask import Blueprint, request, jsonify, make_response
+from flask import Blueprint, request, jsonify, make_response, Response
 from schema import Optional, Or, Schema, SchemaError
 from sqlalchemy import func
 
@@ -11,6 +11,7 @@ from secrets import token_hex
 from ..database import Session
 from datetime import datetime
 from dateutil import parser
+import ujson
 import hashlib
 
 class DisplayHandler:
@@ -27,34 +28,30 @@ class DisplayHandler:
             Optional("from"): str,
             Optional("to"): str
         }, ignore_extra_keys=True)
-
-        sen = self.session.query(Sensor)
         try:
             con = schema.validate(all_args)
         except Exception as err:
             print(err)
             return returnError("Schema not validated")
+        
+        if only_latest:
+            mes = self.session.query(Measurement, func.max(Measurement.datetime)).group_by(Measurement.sensor_id)
+        else:
+            mes = self.session.query(Measurement)
         #proccess Stations
         if "platform" in con.keys():
             con["platform"] = [int(x) for x in con["platform"].split(",")]
             for i in con["platform"]:
                 if not self.session.query(Station).filter(Station.id == i).all():
                     return returnError("Platform with ID " + str(i) + " does not exist")
-            sen = sen.join(Station).filter(Station.id.in_(con["platform"]))
+            mes = mes.join(Sensor).join(Station).filter(Station.id.in_(con["platform"]))
         #proccess MesaurementType
         if "measurements" in con.keys():
             con["measurements"] = con["measurements"].split(",")
             for i in con["measurements"]:
                 if not self.session.query(MeasurementType).filter(MeasurementType.name == i).all():
                     return returnError("No measurement type of " + str(i))
-                sen = sen.join(MeasurementType).filter(MeasurementType.name.in_(con["measurements"]))
-        if only_latest:
-            mes = self.session.query(Measurement, func.max(Measurement.datetime)).group_by(Measurement.sensor_id)
-        else:
-            mes = self.session.query(Measurement)
-        #print("Sen", sen.all(), [s.id for s in sen.all()])
-        #print("Mes", mes.all())
-        mes = mes.filter(Measurement.sensor_id.in_([s.id for s in sen.all()]))
+                mes = mes.join(MeasurementType).filter(MeasurementType.name.in_(con["measurements"]))
         #proccess DateTime
         try:
             if "from" in con.keys():
@@ -66,8 +63,8 @@ class DisplayHandler:
         except Exception as err:
             print(err)
             return returnError("date format not correct")
-
         l = []
+        
         for m in mes.all():
             if only_latest:
                 m = m[0]
@@ -80,13 +77,13 @@ class DisplayHandler:
                     "unit": m.Sensor.MeasurementType.unit,
                     "value": m.value
                 },
+                "hash": str(m.id)
             }
-            a["hash"] = hashlib.sha256(json.dumps(a).encode("utf-8")).hexdigest()
             l.append(a)
-
-        response = make_response(
-            jsonify(l),
-            200,
+        response = Response(
+            response=ujson.dumps(l),
+            status=200,
+            mimetype='application/json'
         )
         return response
 
