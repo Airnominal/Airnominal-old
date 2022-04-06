@@ -42,7 +42,7 @@ import { Sensor, Station } from '@/utils/getStations'
 import { Measurement } from '@/utils/getMeasurements'
 import { SettingsModule } from '@/store/modules/settings'
 import { getColor } from '@/utils/colors'
-import { getLocalISOString } from '@/utils/date'
+import { getLocalISOString, getLocalUnixTime } from '@/utils/date'
 
 Chart.register(zoomPlugin, ...registerables)
 Vue.use(VComp)
@@ -51,7 +51,7 @@ Vue.use(VComp)
   components: { LineChart }
 })
 export default class TextDisplay extends Vue {
-  @Prop() stations!: Station[]
+  @Prop() stations!: Map<string, Station>
   @Prop() data!: Measurement[]
   @Prop() type!: Sensor
 
@@ -194,6 +194,7 @@ export default class TextDisplay extends Vue {
         },
         ticks: {
           autoSkip: true,
+          sampleSize: 50,
           autoSkipPadding: 25,
           maxRotation: 0,
           minRotation: 0,
@@ -229,12 +230,26 @@ export default class TextDisplay extends Vue {
         }
       },
     },
+    elements: {
+      point: {
+        radius: 0,
+      },
+    },
+    interaction: {
+      intersect: false,
+      mode: 'nearest',
+      axis: 'x',
+    },
     animation: false,
+    parsing: false,
+    normalized: true,
+    spanGaps: 30*60*1000,
   }
 
   get measurements (): any {
-    let source = this.data.filter((item: Measurement) => item.data.name == this.type.mes_type)
+    performance.mark('view.chart.begin')
 
+    let source = this.data.filter((item: Measurement) => item.data.name == this.type.mes_type)
     let data: {
       datasets: {
         data: { x: any, y: any }[],
@@ -247,26 +262,31 @@ export default class TextDisplay extends Vue {
 
     let values: number[] = []
 
-    for (const platform of this.stations) {
+    for (const platform of this.stations.values()) {
       const color = getColor(parseInt(platform.id))
       const current = source.filter(item => item.platform == platform.id)
 
       values.push(...current.map(value => value.data.value))
 
       data.datasets.push({
-        data: current.map(data => ({ x: data.timestamp, y: data.data.value })),
+        data: current.map(data => ({ x: getLocalUnixTime(data.timestamp), y: data.data.value })),
         label: platform.name,
         backgroundColor: color,
         borderColor: color,
         fill: false,
-        tension: 0.1
+        parsing: false,
+        normalized: true,
+        indexAxis: 'x',
+        tension: 0.01,
       })
     }
 
     (this.options.scales!.y as LinearScaleOptions)!.suggestedMin = Math.max(Math.min(...values) - 5, 0);
     (this.options.scales!.y as LinearScaleOptions)!.suggestedMax = Math.max(...values) + 5
 
-    // console.log(data)
+    performance.mark('view.chart.end')
+    performance.measure('view.chart', 'view.chart.begin', 'view.chart.end')
+
     return data
   }
 

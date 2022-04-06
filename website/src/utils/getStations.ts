@@ -14,9 +14,9 @@ export interface Station {
   sensors: Sensor[];
 }
 
-let stationsStore: Station[] = []
+let stationsStore = new Map<string, Station>()
 
-export async function getStations (): Promise<[Station[], boolean]> {
+export async function getStations (): Promise<[Map<string, Station>, boolean]> {
   if (!navigator.onLine) {
     displaySnackbar('No internet connection')
     return [stationsStore, false]
@@ -24,7 +24,7 @@ export async function getStations (): Promise<[Station[], boolean]> {
 
   try {
     const response = await fetchHandle(process.env.VUE_APP_BACKEND + '/platforms?_now=' + Date.now())
-    stationsStore = await response.json()
+    stationsStore = new Map((await response.json()).map((item: Station) => [item.id, item]))
     return [stationsStore, true]
   } catch (error) {
     displaySnackbar('Error while accessing data')
