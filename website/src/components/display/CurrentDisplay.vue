@@ -35,15 +35,25 @@ export default class CurrentDisplay extends Vue {
   lastData: string = 'No data'
 
   get latest (): Measurement[] {
+    performance.mark('view.current.begin')
+
     let latestData = new Map<string, Measurement>()
+    let latestDate: string | undefined = undefined
 
     for (let measurement of this.data) {
       if (measurement.platform == this.station.id) {
         latestData.set(measurement.data.name, measurement)
-        this.lastData = getLocalISOString(measurement.timestamp)
-          .replace('T', ' ').slice(0, 19) + ' Z'
+        latestDate = measurement.timestamp
       }
     }
+
+    if (latestDate) {
+      const converted = getLocalISOString(latestDate)
+      if (converted) this.lastData = converted.replace('T', ' ').slice(0, 19) + ' Z'
+    }
+
+    performance.mark('view.current.end')
+    performance.measure('view.current', 'view.current.begin', 'view.current.end')
 
     return [...latestData.values()]
   }

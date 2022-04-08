@@ -4,7 +4,7 @@
       <v-col v-if="displayCurrentData" class="ps-4 pt-4 current-data-col" cols="12">
         <v-card class="pb-4 current-data-card" tile outlined>
           <div class="pt-4 px-4 text-h6">Current Data</div>
-          <div class="pt-4 px-4" v-for="station in stations" :key="station.id">
+          <div class="pt-4 px-4" v-for="station in stations.values()" :key="station.id">
             <current-display :station="station" :data="data" :last-updated="lastUpdated" />
           </div>
         </v-card>
@@ -59,7 +59,7 @@ export default class ViewStation extends Vue {
   lastUpdated?: string
   updaterId?: number
 
-  stations: Station[] = []
+  stations = new Map<string, Station>()
   sensors: Sensor[] = []
   data: Measurement[] = []
 
@@ -82,11 +82,15 @@ export default class ViewStation extends Vue {
 
     // Get current stations
     const allStations = (await getStations())[0]
-    const currStations = stationIds.map(id => allStations.find(item => item.id === id))
-    this.stations = (currStations as Station[])
+    const currStations = new Map<string, Station>()
+    stationIds.forEach(id => {
+      const station = allStations.get(id)
+      if (station) currStations.set(id, station)
+    })
+    this.stations = currStations
 
     // Check for non-existing stations
-    if (!currStations.every(item => item)) {
+    if (!currStations.size) {
       await this.$router.replace({
         name: 'notFound',
         params: { 0: this.$route.fullPath }
@@ -94,24 +98,29 @@ export default class ViewStation extends Vue {
       return
     }
 
-    // Get available sensors
-    let sensors = new Map<string, Sensor>()
-    for (const station of this.stations) {
+    // Get available sensors and station names
+    const sensors = new Map<string, Sensor>()
+    const names = []
+    for (const station of this.stations.values()) {
       for (const sensor of station.sensors) {
         sensors.set(sensor.mes_type, sensor)
       }
+      names.push(station.name)
     }
     this.sensors = [...sensors.values()]
 
     // Set page title
-    const stationNames = currStations.map(item => item?.name).join(', ')
-    document.title = process.env.VUE_APP_TITLE + ' – ' + stationNames
-    this.$emit('setPageTitle', 'Station – ' + stationNames)
+    const pageTitle = names.join(', ')
+    document.title = process.env.VUE_APP_TITLE + ' – ' + pageTitle
+    this.$emit('setPageTitle', 'Station – ' + pageTitle)
 
     // Register measurements updater
     let fetchData = async () => {
-      const newUpdated = (new Date()).toISOString()
+      // TODO: Optimize data updater - Do not re-process existing measurements
+      performance.mark('updater.begin')
 
+      // Obtain all new measurements from the API
+      const newUpdated = (new Date()).toISOString()
       const [data, success] = await getMeasurements(stationIds, undefined, this.lastUpdated)
       if (!success) return
 
@@ -124,7 +133,9 @@ export default class ViewStation extends Vue {
       this.data = [...combined.values()].sort((a, b) => (a.timestamp > b.timestamp) ? 1 : -1)
       this.locationProvided = !!this.data[this.data.length - 1]?.coordinates
       this.lastUpdated = newUpdated
-      console.log(this.data)
+
+      performance.mark('updater.end')
+      performance.measure('updater', 'updater.begin', 'updater.end')
     }
 
     this.updaterId = setInterval(fetchData, SettingsModule.updateInterval * 1000)

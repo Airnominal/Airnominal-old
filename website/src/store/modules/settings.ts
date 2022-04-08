@@ -15,7 +15,7 @@ class Settings extends VuexModule {
   displayCurrentData = true
   displayCharts = true
   displayMaps = true
-  updateInterval = 10
+  updateInterval = 60
   theme: ThemeType = ThemeType.System
 
   @Mutation

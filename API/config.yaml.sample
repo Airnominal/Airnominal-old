@@ -1,3 +1,7 @@
+<<<<<<< HEAD
 database: #tukej ga daj
+=======
+database: //tukaj ime baze
+>>>>>>> 91924199515310fac9e0662efbf6f79fac4699f1
 cors:
 - http://localhost:8080

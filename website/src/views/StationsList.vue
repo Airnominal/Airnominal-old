@@ -4,7 +4,7 @@
       <v-list>
         <strong>Select Station</strong>
         <v-list-item-group color="primary">
-          <v-list-item v-for="station in stations" :key="station.id" :to="{ name: 'viewStation', params: { stations: station.id } }" link>
+          <v-list-item v-for="station in stations.values()" :key="station.id" :to="{ name: 'viewStation', params: { stations: station.id } }" link>
             <v-list-item-content>
               <v-list-item-title v-text="station.name"></v-list-item-title>
               <v-list-item-subtitle v-text="station.description"></v-list-item-subtitle>
@@ -32,7 +32,7 @@ import { SettingsModule } from '@/store/modules/settings'
 @Component({})
 export default class StationsList extends Vue {
   updater?: number
-  stations: Station[] = []
+  stations = new Map<string, Station>()
 
   created (): void {
     // Display updated message

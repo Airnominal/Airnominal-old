@@ -38,7 +38,7 @@
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator'
 import { LMap, LMarker, LTileLayer, LTooltip } from 'vue2-leaflet'
-import { latLngBounds, LatLngBounds } from 'leaflet'
+import { latLngBounds, LatLngBounds, LatLngExpression } from 'leaflet'
 
 import { displaySnackbar } from '@/utils/snackbar'
 import { fixMarkerIcons, Marker } from '@/utils/map'
@@ -86,12 +86,14 @@ export default class StationsMap extends Vue {
     const locations = new Map<string, Marker>()
 
     const stations = (await getStations())[0]
-    const data = (await getLatestMeasurements())[0]
+    const measurements = (await getLatestMeasurements())[0]
 
-    for (let measurement of data) {
+    for (let measurement of measurements) {
+      if (!measurement.coordinates) continue
+
       // Get station for each data row
-      const station = stations.find(station => station.id == measurement.platform)
-      if (!station || !measurement.coordinates) continue
+      const station = stations.get('' + measurement.platform)
+      if (!station) continue
 
       // Store latest locations for each station
       locations.set(measurement.platform, {
@@ -105,7 +107,9 @@ export default class StationsMap extends Vue {
 
     // Set map's markers and bounds
     this.markers = [...locations.values()]
-    this.bounds = latLngBounds(this.markers.map(marker => marker.position || [0, 0])).pad(0.05)
+    const coords: LatLngExpression[] = this.markers.map(marker => marker.position || [0, 0])
+    if (!coords.length) coords.push([0, 0])
+    this.bounds = latLngBounds(coords).pad(0.05)
   }
 }
 </script>

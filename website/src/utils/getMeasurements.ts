@@ -39,14 +39,18 @@ export async function getMeasurements (platforms?: string[], measurements?: stri
   }
 }
 
-export async function getLatestMeasurements (): Promise<[Measurement[], boolean]> {
+export async function getLatestMeasurements (platforms?: string[]): Promise<[Measurement[], boolean]> {
   if (!navigator.onLine) {
     displaySnackbar('No internet connection')
     return [latestMeasurementsStore, false]
   }
 
+  let params = new URLSearchParams()
+  if (platforms?.length) params.set('platform', platforms.join(','))
+  params.set('_now', String(Date.now()))
+
   try {
-    const response = await fetchHandle(process.env.VUE_APP_BACKEND + '/measurements/latest?_now=' + Date.now())
+    const response = await fetchHandle(process.env.VUE_APP_BACKEND + '/measurements/latest?' + params.toString())
     latestMeasurementsStore = await response.json()
     return [latestMeasurementsStore, true]
   } catch (error) {

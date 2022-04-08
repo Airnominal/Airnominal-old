@@ -40,8 +40,8 @@ fixMarkerIcons()
 @Component({
   components: { LMap, LTileLayer, LMarker, LTooltip, LPolyline }
 })
-export default class TextDisplay extends Vue {
-  @Prop() stations!: Station[]
+export default class MapDisplay extends Vue {
+  @Prop() stations!: Map<string, Station>
   @Prop() data!: Measurement[]
 
   url = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
@@ -55,12 +55,17 @@ export default class TextDisplay extends Vue {
   @Watch('data')
   @Watch('stations')
   onDataChanged () {
+    performance.mark('view.map.begin')
+
     let latestLocations = new Map<string, Marker>()
     let locationHistories = new Map<string, Polyline>()
 
     for (let measurement of this.data) {
-      const station = this.stations.find(station => station.id == measurement.platform)
-      if (!station || !measurement.coordinates) continue
+      if (!measurement.coordinates) continue
+
+      // Get station for each data row
+      const station = this.stations.get('' + measurement.platform)
+      if (!station) continue
 
       // Store latest locations for each station
       latestLocations.set(measurement.platform, {
@@ -69,17 +74,29 @@ export default class TextDisplay extends Vue {
       })
 
       // Store location history for each location
-      let history = [...locationHistories.get(station.id)?.points || [], measurement.coordinates]
-      locationHistories.set(station.id, { points: history, color: getColor(parseInt(station.id)) })
+      // If location history is already initialized, just add new location to array
+      // Otherwise, create a new polyline object with the current location
+      const history = locationHistories.get(measurement.platform)
+      if (history && history.points) {
+        history.points.push(measurement.coordinates)
+      } else {
+        locationHistories.set(measurement.platform, {
+          points: [measurement.coordinates],
+          color: getColor(parseInt(measurement.platform))
+        })
+      }
     }
 
     const markers = [...latestLocations.values()]
     const polylines = [...locationHistories.values()]
-    const bounds = latLngBounds(markers.map(marker => marker.position || [0, 0]))
+    const bounds = latLngBounds(markers.map(marker => marker.position || [0, 0])).pad(0.05)
 
-    this.bounds = bounds.pad(0.05)
+    this.bounds = bounds
     this.markers = markers
     this.polylines = polylines
+
+    performance.mark('view.map.end')
+    performance.measure('view.map', 'view.map.begin', 'view.map.end')
   }
 
   mounted () {
