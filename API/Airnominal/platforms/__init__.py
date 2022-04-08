@@ -182,7 +182,7 @@ class PlatformsHandler:
                             except:
                                 return returnError(mes["unixTime"] + " is not valid unix format timestamp")
                         else:
-                            time = datetime.now()
+                            time = datetime.utcnow()
                         m = Measurement(value = mes["value"], datetime=time, lon=mes["lon"], lat=mes["lat"])
                         self.session.add(m)
                         se.measurements.append(m)
@@ -240,7 +240,7 @@ class PlatformsHandler:
                             return returnError(mes["unixTime"] + " is not valid unix format timestamp")
                     else:
                     '''
-                    time = datetime.now()
+                    time = datetime.utcnow()
                     m = Measurement(value = stat["v"], datetime=time, lon=stat["lon"], lat=stat["lat"])
                     self.session.add(m)
                     se.measurements.append(m)

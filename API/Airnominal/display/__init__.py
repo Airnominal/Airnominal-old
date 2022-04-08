@@ -4,6 +4,7 @@ import sched
 from flask import Blueprint, request, jsonify, make_response, Response
 from schema import Optional, Or, Schema, SchemaError
 from sqlalchemy import func
+from sqlalchemy.orm import load_only, joinedload, noload
 
 from ..database import Measurement, Station, Sensor, MeasurementType
 from ..utils import returnError
@@ -64,8 +65,8 @@ class DisplayHandler:
             print(err)
             return returnError("date format not correct")
         l = []
-        
-        for m in mes.all():
+        mes = mes.options(joinedload("Sensor").load_only("station_id"), noload("Sensor.Station"), joinedload("Sensor.MeasurementType").load_only("name", "unit"))
+        for m in mes.yield_per(100):
             if only_latest:
                 m = m[0]
             a = {
