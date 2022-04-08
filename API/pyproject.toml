@@ -5,6 +5,9 @@ description = "The system of storage and display of user generated air measureme
 authors = ["Jakob Kralj in Filip Štamcar"]
 license = "GPLv3"
 
+[tool.poetry.scripts]
+airnominal = "Airnominal.__main__:main"
+
 [tool.poetry.dependencies]
 python = "^3.8"
 Flask = "^2.0.3"

@@ -1,7 +1,6 @@
-<<<<<<< HEAD
-database: #tukej ga daj
-=======
-database: //tukaj ime baze
->>>>>>> 91924199515310fac9e0662efbf6f79fac4699f1
+database: sqlite:///app.db?check_same_thread=False
+
 cors:
 - http://localhost:8080
+- http://zrak.gimvic.org
+- https://zrak.gimvic.org

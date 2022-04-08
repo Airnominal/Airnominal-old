@@ -64,6 +64,11 @@
         it again after closing this page.
       </div>
 
+      <div class="text-justify pb-3">
+        Please check the <a href="https://github.com/ChristofferNorgaard/Airnominal/tree/main/boards#readme"
+        target="_blank">documentation</a> for more details about setting up the station.
+      </div>
+
       <kbd>{{ JSON.stringify(this.stationConfig) }}</kbd>
     </div>
   </div>

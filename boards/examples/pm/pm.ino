@@ -62,8 +62,8 @@ void loop() {
     Serial.print("Particles > 5.0um / 0.1L air:"); Serial.println(data.particles_50um);
     Serial.print("Particles > 10.0 um / 0.1L air:"); Serial.println(data.particles_100um);
     Serial.println("---------------------------------------");
-    createMeasurement(PM10, data.particles_100um, 46.19474520567524, 14.547483959689584);
-    createMeasurement(PM5, data.particles_50um, 46.19474520567524, 14.547483959689584);
+    createMeasurement(PM10, data.particles_100um, LATITUDE, LONGITUDE);
+    createMeasurement(PM5, data.particles_50um, LATITUDE, LONGITUDE);
     }
   if ((millis() - lastTime) > timerDelay) {
     //Check WiFi connection status
