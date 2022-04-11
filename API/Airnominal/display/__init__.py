@@ -34,25 +34,27 @@ class DisplayHandler:
         except Exception as err:
             print(err)
             return returnError("Schema not validated")
-        
+
         if only_latest:
             mes = self.session.query(Measurement, func.max(Measurement.datetime)).group_by(Measurement.sensor_id)
         else:
             mes = self.session.query(Measurement)
+        mes = mes.join(Sensor).join(MeasurementType)
+
         #proccess Stations
         if "platform" in con.keys():
             con["platform"] = [int(x) for x in con["platform"].split(",")]
             for i in con["platform"]:
                 if not self.session.query(Station).filter(Station.id == i).all():
                     return returnError("Platform with ID " + str(i) + " does not exist")
-            mes = mes.join(Sensor).join(Station).filter(Station.id.in_(con["platform"]))
+            mes = mes.join(Station).filter(Station.id.in_(con["platform"]))
         #proccess MesaurementType
         if "measurements" in con.keys():
             con["measurements"] = con["measurements"].split(",")
             for i in con["measurements"]:
                 if not self.session.query(MeasurementType).filter(MeasurementType.name == i).all():
                     return returnError("No measurement type of " + str(i))
-                mes = mes.join(MeasurementType).filter(MeasurementType.name.in_(con["measurements"]))
+                mes = mes.filter(MeasurementType.name.in_(con["measurements"]))
         #proccess DateTime
         try:
             if "from" in con.keys():
