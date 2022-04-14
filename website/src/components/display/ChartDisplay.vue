@@ -110,8 +110,8 @@ export default class TextDisplay extends Vue {
       return
     }
 
-    // Display last 60 minutes by default
-    this.zoomSet(60)
+    // Display last day by default
+    this.zoomSet(24*60)
   }
 
   resetQueryParams (): void {
@@ -146,7 +146,7 @@ export default class TextDisplay extends Vue {
     const scaleBounds = chart?.getInitialScaleBounds().x!
     const scaleLimits = chart?.scales.x!
 
-    const dataMax = (scaleBounds.max || scaleLimits.max || 0) + 15000
+    const dataMax = (scaleBounds.max || scaleLimits.max || 0)
     const dataMin = Math.max(dataMax - minutes*60*1000, scaleBounds.min || scaleLimits.min || 0)
 
     chart?.zoomScale('x', { min: dataMin, max: dataMax }, 'none')
@@ -243,7 +243,7 @@ export default class TextDisplay extends Vue {
     animation: false,
     parsing: false,
     normalized: true,
-    spanGaps: 30*60*1000,
+    spanGaps: 90*60*1000,
   }
 
   get measurements (): any {

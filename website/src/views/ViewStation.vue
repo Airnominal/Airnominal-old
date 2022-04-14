@@ -124,6 +124,8 @@ export default class ViewStation extends Vue {
       const [data, success] = await getMeasurements(stationIds, undefined, this.lastUpdated)
       if (!success) return
 
+      performance.mark('updater.process')
+
       // Combine with existing data and remove duplicates
       const combined = new Map<string, Measurement>()
       for (const item of this.data) combined.set(item.hash, item)
